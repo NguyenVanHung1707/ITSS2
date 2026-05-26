@@ -1,0 +1,85 @@
+services:
+  # Database Service
+  db:
+    image: postgres:16-alpine
+    container_name: cnweb_db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-hung2004}
+      POSTGRES_DB: ${DB_NAME:-CNWEB}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend:
+    build:
+      context: ./BE/api
+      dockerfile: Dockerfile
+    container_name: cnweb_backend
+    ports:
+      - "${PORT:-5000}:5000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      restore:
+        condition: service_completed_successfully
+    networks:
+      - app_network
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./FE
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    container_name: cnweb_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  # Restore Service (Runs on startup to check/restore data)
+  restore:
+    image: postgres:16-alpine
+    container_name: cnweb_restore
+    volumes:
+      - ./Data:/data
+    env_file:
+      - .env
+    environment:
+      PGPASSWORD: ${DB_PASS:-hung2004}
+      DB_HOST: db
+      DB_USER: ${DB_USER:-postgres}
+      DB_NAME: ${DB_NAME:-CNWEB}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+    command: sh /data/restore.sh
+    restart: no
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  huggingface_cache:
+  uv_cache:

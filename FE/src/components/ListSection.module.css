@@ -1,0 +1,155 @@
+/* .sectionContainer {
+  container-type: inline-size;
+  container-name: list-section;
+  height: 100%; 
+  overflow-y: auto; 
+}
+
+.sliderCard {
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+
+.categoryTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.sliderWrapper {
+  position: relative;
+}
+
+.sliderContainer {
+  padding-bottom: 20px; 
+  scroll-behavior: smooth;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sliderTrack {
+  display: flex;
+  gap: 20px;
+  padding: 0 2rem;
+}
+
+.cardContainer{
+  position: relative;
+  width: clamp(160px, 28cqi, 220px);
+  height: clamp(240px, 42cqi, 300px);
+  cursor: pointer;
+  flex-shrink: 0; 
+}
+
+.summaryCard, .detailCard {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  background-color: white;
+  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-sizing: border-box; 
+}
+
+.bookImage {
+  width: 50%;
+  aspect-ratio: 2 / 3; 
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+
+.bookTitle {
+  font-size: clamp(0.9rem, 1.8cqmin, 1.3rem);
+  margin: 0 0 8px 0;
+  min-height: 2.4em;
+}
+
+.bookAuthor {
+  margin: 0 0 8px 0; font-style: italic; color: #555;
+  font-size: clamp(0.7rem, 1.7cqmin, 0.9rem);
+}
+.bookDescription {
+  font-size: 0.9em; 
+  color: #777;
+  font-size: clamp(0.6rem, 1.6cqmin, 0.95rem);
+}
+
+.detailCard {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none; 
+  transform: scale(0.95);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+.summaryCard {
+  padding: 16px;
+}
+
+.detailCard .detailContent {
+  flex: 1;
+}
+
+.isActive {
+ 
+}
+
+.cardContainer:hover .detailCard,
+.cardContainer.isActive .detailCard {
+  width: clamp(220px, 45cqi, 360px);
+  opacity: 1;
+  pointer-events: auto; 
+  transform: scale(1);
+}
+.cardContainer:hover .summaryCard,
+.cardContainer.isActive .summaryCard {
+  opacity: 0;
+  transform: scale(0.95);
+} */
+
+/* .navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: all 0.2s ease-in-out;
+} */
+
+/* .navButton:hover {
+  background-color: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.left {
+  left: 10px;
+}
+
+.right {
+  right: 10px;
+} */
