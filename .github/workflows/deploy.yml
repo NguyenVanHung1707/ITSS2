@@ -51,8 +51,18 @@ jobs:
             # Navigate to the project root directory
             cd /root/ITSS2
 
-            # Pull latest updates from Git
-            git pull origin main || git pull origin master
+            # Initialize Git if not already done (e.g. if files were uploaded via SCP/SFTP without .git)
+            if [ ! -d ".git" ]; then
+              echo "🔄 .git directory not found. Initializing Git repository in-place..."
+              git init
+              git remote add origin https://github.com/NguyenVanHung1707/ITSS2.git
+              git fetch origin
+              git checkout -f main || git checkout -f master
+              git branch --set-upstream-to=origin/main main || true
+            else
+              # Pull latest updates from Git
+              git pull origin main || git pull origin master
+            fi
 
             # Rebuild and restart production containers
             docker compose -f docker-compose.prod.yml up --build -d
