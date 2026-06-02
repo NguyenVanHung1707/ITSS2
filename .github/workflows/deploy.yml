@@ -64,8 +64,11 @@ jobs:
               git pull origin main || git pull origin master
             fi
 
-            # Rebuild and restart production containers
-            docker compose -f docker-compose.prod.yml up --build -d
+            # Stop and remove old prod container stack (e.g., Caddy) if present to keep the VPS clean
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+
+            # Rebuild and restart production containers using VPS compose file (using host Nginx on port 80/443)
+            docker compose -f docker-compose.vps.yml up --build -d
 
             # Clean up old unused docker images to save disk space
             docker image prune -f
