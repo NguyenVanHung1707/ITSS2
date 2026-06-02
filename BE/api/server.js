@@ -8,23 +8,15 @@ import "./models/index.js";
 import sequelize from "./config/db-config.js";
 import authRoutes from "./routes/auth-route.js";
 import userRoutes from "./routes/user-route.js";
-import bookRoutes from "./routes/book-route.js";
-import subjectRoutes from "./routes/subject-route.js";
-import authorRoutes from "./routes/author-route.js";
-import commentRoutes from "./routes/comment-route.js";
-import bookshelfRoutes, { bookshelfAdminRouter } from "./routes/bookshelf-route.js";
-import paymentRoute from "./routes/payment-route.js";
+import documentRoutes from "./routes/document-route.js";
+import courseRoutes from "./routes/course-route.js";
+import facultyRoutes from "./routes/faculty-route.js";
+import voteRoutes from "./routes/vote-route.js";
+import bookshelfRoutes from "./routes/bookshelf-route.js";
+import chaptersRoutes from "./routes/chapters-route.js";
+import searchHistoryRoutes from "./routes/search_history-route.js";
 import statsRoutes from "./routes/stats-route.js";
-import ttsRoutes from "./routes/tts-route.js";
-import summaryRoutes from "./routes/summary-route.js";
-import taskRoutes from "./routes/task-route.js";
-import chatbotRoutes from "./routes/chatbot-route.js";
-import translationRoutes from "./routes/translation-route.js";
-import comicRoutes from "./routes/comic-route.js";
-import subscriptionRoutes from "./routes/subscription-route.js";
-import chapterRoutes from "./routes/chapter-route.js";
-import { initializeVectorStore } from "./services/rag-service.js";
-
+import { seedDatabase } from "./config/seeder.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -33,18 +25,42 @@ const PORT = process.env.PORT || 5000;
 const DB_SYNC = process.env.DB_SYNC || "alter"; // options: 'alter' | 'force' | 'none'
 
 // Middleware
-// Allow origins from env or default to dev ports
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ["http://localhost:5173", "http://localhost:5174"];
+  ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+  : [
+      "http://localhost",
+      "http://localhost:80",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://127.0.0.1",
+      "http://127.0.0.1:80",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+    ];
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const { protocol, hostname } = new URL(origin);
+      return (
+        (protocol === "http:" || protocol === "https:") &&
+        (hostname === "localhost" || hostname === "127.0.0.1")
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+};
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow non-browser requests or same-origin
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      if (isAllowedOrigin(origin)) return callback(null, true);
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
@@ -57,42 +73,37 @@ app.use(cookieParser());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/books", bookRoutes);
-app.use("/api/subjects", subjectRoutes);
-app.use("/api/authors", authorRoutes);
-app.use("/api/comments", commentRoutes);
-app.use("/api/bookshelf", bookshelfRoutes);
-app.use("/api/admin/bookshelf", bookshelfAdminRouter);
+app.use("/api/documents", documentRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/faculties", facultyRoutes);
+app.use("/api/votes", voteRoutes);
+app.use("/api/search-history", searchHistoryRoutes);
 app.use("/api/admin/stats", statsRoutes);
-app.use("/api/tts", ttsRoutes);
-app.use("/api/summary", summaryRoutes);
-app.use("/api/tasks", taskRoutes);
-app.use("/api/chatbot", chatbotRoutes);
-app.use("/api/translate", translationRoutes);
-app.use("/api/comic", comicRoutes);
-app.use("/api/subscriptions", subscriptionRoutes);
-app.use("/api/chapters", chapterRoutes);
 
-// Public stats route (no auth required)
+// Backward compatibility routes mapping older book-sharing entities
+app.use("/api/books", documentRoutes);
+app.use("/api/authors", facultyRoutes);
+app.use("/api/subjects", courseRoutes);
+app.use("/api/comments", voteRoutes);
+app.use("/api/bookshelf", bookshelfRoutes);
+app.use("/api/chapters", chaptersRoutes);
+
+// Public stats route
 import StatsController from "./controllers/stats-controller.js";
 app.get("/api/public/stats", StatsController.getPublicStats);
-
-app.use("/api/payment", paymentRoute);
-app.use("/api/summary", summaryRoutes);
-app.use("/api/tts", ttsRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {
     await sequelize.authenticate();
     res.json({
       status: "OK",
-      message: "Server is running",
+      message: "HUST Study Document API is running",
       database: "Connected",
     });
   } catch (error) {
     res.status(503).json({
       status: "ERROR",
-      message: "Server is running but database is disconnected",
+      message: "HUST Study Document API is running but database is disconnected",
       database: "Disconnected",
     });
   }
@@ -144,7 +155,7 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log("Database connection established successfully.");
 
-    // Sync models to database (create/update tables)
+    // Sync models to database
     if (DB_SYNC !== "none") {
       const syncOptions = DB_SYNC === "force" ? { force: true } : { alter: true };
       await sequelize.sync(syncOptions);
@@ -155,13 +166,13 @@ const startServer = async () => {
       console.log("Sequelize sync skipped (DB_SYNC=none).");
     }
 
+    // Seed database with default HUST data if empty
+    await seedDatabase();
+
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/api/health`);
     });
-
-    // Initialize RAG Vector Store
-    initializeVectorStore();
   } catch (error) {
     console.error("❌ Unable to start server:", error);
     process.exit(1);

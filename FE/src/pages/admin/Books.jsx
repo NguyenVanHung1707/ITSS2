@@ -6,30 +6,31 @@ import AdminAuthorService from '../../service/AdminAuthorService';
 import AdminSubjectService from '../../service/AdminSubjectService';
 import AdminChapterService from '../../service/AdminChapterService';
 import Pagination from '../../components/admin/Pagination';
+import { DEFAULT_DOCUMENT_TYPE, DOCUMENT_TYPES } from '../../constants/documentTypes';
 
 
-// Custom Searchable Subject Select Component
-function SubjectSelect({ subjects, value, onChange }) {
+// Custom Searchable Course Select Component
+function CourseSelect({ courses, value, onChange, placeholder = "Tất cả học phần" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef(null);
 
-  const selectedSubject = subjects.find(s => s.id === value);
+  const selectedCourse = courses.find(c => c.id === value);
 
   useEffect(() => {
     if (!value) {
       setSearchTerm('');
-    } else if (selectedSubject) {
-      setSearchTerm(selectedSubject.name);
+    } else if (selectedCourse) {
+      setSearchTerm(selectedCourse.name);
     }
-  }, [value, selectedSubject]);
+  }, [value, selectedCourse]);
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setIsOpen(false);
-        if (selectedSubject) {
-          setSearchTerm(selectedSubject.name);
+        if (selectedCourse) {
+          setSearchTerm(selectedCourse.name);
         } else if (!value) {
           setSearchTerm('');
         }
@@ -37,14 +38,14 @@ function SubjectSelect({ subjects, value, onChange }) {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [value, selectedSubject]);
+  }, [value, selectedCourse]);
 
-  const filteredSubjects = subjects
-    .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredCourses = courses
+    .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.code?.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleSelect = (subject) => {
-    onChange(subject.id);
-    setSearchTerm(subject.name);
+  const handleSelect = (course) => {
+    onChange(course.id);
+    setSearchTerm(course.name);
     setIsOpen(false);
   };
 
@@ -54,7 +55,7 @@ function SubjectSelect({ subjects, value, onChange }) {
         <input
           type="text"
           className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 outline-none h-[38px] pr-8 cursor-text"
-          placeholder="Tất cả chủ đề"
+          placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -70,14 +71,14 @@ function SubjectSelect({ subjects, value, onChange }) {
 
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          {filteredSubjects.length > 0 ? (
-            filteredSubjects.map(subject => (
+          {filteredCourses.length > 0 ? (
+            filteredCourses.map(course => (
               <button
-                key={subject.id}
-                onClick={() => handleSelect(subject)}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${value === subject.id ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}
+                key={course.id}
+                onClick={() => handleSelect(course)}
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${value === course.id ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}
               >
-                {subject.name}
+                {course.code ? `${course.code} - ${course.name}` : course.name}
               </button>
             ))
           ) : (
@@ -90,7 +91,7 @@ function SubjectSelect({ subjects, value, onChange }) {
 }
 
 // Custom Searchable Select Component
-function AuthorSelect({ authors, value, onChange, placeholder = "Tất cả tác giả" }) {
+function AuthorSelect({ authors, value, onChange, placeholder = "Tất cả Khoa | Viện | Trường" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef(null);
@@ -172,98 +173,11 @@ function AuthorSelect({ authors, value, onChange, placeholder = "Tất cả tác
   );
 }
 
-// Custom Multi-Select Component for Subjects
-function MultiSubjectSelect({ subjects, value, onChange }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const wrapperRef = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setIsOpen(false);
-        setSearchTerm('');
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const filteredSubjects = subjects
-    .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    .filter(s => !value.includes(s.id)); // Exclude already selected
-
-  const handleSelect = (subject) => {
-    onChange([...value, subject.id]);
-    setSearchTerm('');
-  };
-
-  const handleRemove = (id) => {
-    onChange(value.filter(v => v !== id));
-  };
-
-  const selectedSubjectsNames = value.map(id => {
-    const s = subjects.find(sub => sub.id === id);
-    return s ? s.name : id;
-  });
-
-  return (
-    <div className="relative" ref={wrapperRef}>
-      <div className="flex flex-wrap items-center gap-1.5 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus-within:ring-2 focus-within:ring-primary/50 min-h-[42px]">
-        {selectedSubjectsNames.map((name, index) => (
-          <span key={value[index]} className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded text-xs flex items-center gap-1">
-            {name}
-            <button
-              type="button"
-              onClick={() => handleRemove(value[index])}
-              className="hover:text-blue-900 dark:hover:text-blue-100"
-            >
-              <X size={12} />
-            </button>
-          </span>
-        ))}
-        <input
-          type="text"
-          className="flex-1 bg-transparent outline-none min-w-[80px]"
-          placeholder={value.length === 0 ? "Chọn chủ đề..." : ""}
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setIsOpen(true);
-          }}
-          onFocus={() => setIsOpen(true)}
-        />
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-20 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          {filteredSubjects.length > 0 ? (
-            filteredSubjects.map(subject => (
-              <button
-                type="button"
-                key={subject.id}
-                onClick={() => handleSelect(subject)}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
-              >
-                {subject.name}
-              </button>
-            ))
-          ) : (
-            <div className="px-3 py-2 text-sm text-slate-400 text-center">
-              {searchTerm ? "Không tìm thấy" : "Nhập để tìm kiếm"}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function Books() {
   const location = useLocation();
   const [books, setBooks] = useState([]);
   const [authors, setAuthors] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -287,8 +201,8 @@ export default function Books() {
   const [formData, setFormData] = useState({
     title: '',
     author_id: '',
-    subjectIds: [],
-    type: 'FREE',
+    courseId: '',
+    type: DEFAULT_DOCUMENT_TYPE,
     page_count: '',
     image_url: '',
     summary: '',
@@ -296,21 +210,23 @@ export default function Books() {
   });
 
   const [authorFilter, setAuthorFilter] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
+  const [courseFilter, setCourseFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, search, authorFilter, subjectFilter, typeFilter]);
+  }, [currentPage, search, authorFilter, courseFilter, typeFilter]);
 
   const fetchFilterData = async () => {
     try {
       const authorsData = await AdminAuthorService.getAllAuthors({ limit: 10000, _t: Date.now() });
-      const subjectsData = await AdminSubjectService.getAllSubjects({ limit: 10000, _t: Date.now() });
+      const coursesData = await AdminSubjectService.getAllSubjects({ limit: 10000, _t: Date.now() });
 
       let authorsList = [];
       if (Array.isArray(authorsData)) {
         authorsList = authorsData;
+      } else if (authorsData?.faculties && Array.isArray(authorsData.faculties)) {
+        authorsList = authorsData.faculties;
       } else if (authorsData?.authors && Array.isArray(authorsData.authors)) {
         authorsList = authorsData.authors;
       } else if (authorsData?.data && Array.isArray(authorsData.data)) {
@@ -319,16 +235,18 @@ export default function Books() {
       authorsList.sort((a, b) => parseInt(b.books_count || 0) - parseInt(a.books_count || 0));
       setAuthors(authorsList);
 
-      let subjectsList = [];
-      if (Array.isArray(subjectsData)) {
-        subjectsList = subjectsData;
-      } else if (subjectsData?.subjects && Array.isArray(subjectsData.subjects)) {
-        subjectsList = subjectsData.subjects;
-      } else if (subjectsData?.data && Array.isArray(subjectsData.data)) {
-        subjectsList = subjectsData.data;
+      let coursesList = [];
+      if (Array.isArray(coursesData)) {
+        coursesList = coursesData;
+      } else if (coursesData?.courses && Array.isArray(coursesData.courses)) {
+        coursesList = coursesData.courses;
+      } else if (coursesData?.subjects && Array.isArray(coursesData.subjects)) {
+        coursesList = coursesData.subjects;
+      } else if (coursesData?.data && Array.isArray(coursesData.data)) {
+        coursesList = coursesData.data;
       }
-      subjectsList.sort((a, b) => parseInt(b.books_count || 0) - parseInt(a.books_count || 0));
-      setSubjects(subjectsList);
+      coursesList.sort((a, b) => parseInt(b.documents_count || b.books_count || 0) - parseInt(a.documents_count || a.books_count || 0));
+      setCourses(coursesList);
     } catch (error) {
       console.error("Failed to fetch filter data", error);
     }
@@ -341,15 +259,18 @@ export default function Books() {
         page: currentPage,
         limit: itemsPerPage,
         q: search,
-        authorId: authorFilter,
-        subjectId: subjectFilter,
+        facultyId: authorFilter,
+        courseId: courseFilter,
         type: typeFilter
       };
 
       const booksData = await AdminBookService.getAllBooks(params);
 
       // Robust Data Handling
-      if (booksData && Array.isArray(booksData.books)) {
+      if (booksData && Array.isArray(booksData.documents)) {
+        setBooks(booksData.documents);
+        setTotalPages(booksData.totalPages || 0);
+      } else if (booksData && Array.isArray(booksData.books)) {
         setBooks(booksData.books);
         setTotalPages(booksData.totalPages || 0);
       } else if (booksData && typeof booksData === 'object' && Array.isArray(booksData.data)) { // Support alternate format
@@ -373,7 +294,7 @@ export default function Books() {
 
   const clearFilters = () => {
     setAuthorFilter('');
-    setSubjectFilter('');
+    setCourseFilter('');
     setTypeFilter('');
     setSearch('');
     setCurrentPage(1);
@@ -487,10 +408,10 @@ export default function Books() {
     if (book) {
       setFormData({
         title: book.title || '',
-        author_id: book.author_id || '',
-        subjectIds: book.subjects ? book.subjects.map(s => s.id) : (book.subjectIds || []),
-        type: book.type || 'FREE',
-        chapter_count: book.chapter_count || 0, // Restored chapter_count
+        author_id: book.faculty_id || book.author_id || '',
+        courseId: book.course_id || book.course?.id || book.subject?.id || '',
+        type: book.type_raw || book.type || DEFAULT_DOCUMENT_TYPE,
+        document_count: book.link_count || book.document_count || book.links?.length || 0,
         page_count: book.page_count || '',
         image_url: book.image_url || '',
         summary: book.summary || '',
@@ -498,7 +419,7 @@ export default function Books() {
       });
     } else {
       setFormData({
-        title: '', author_id: '', subjectIds: [], type: 'FREE', page_count: 0, image_url: '', summary: '', language: 'Tiếng Việt'
+        title: '', author_id: '', courseId: '', document_count: 0, type: DEFAULT_DOCUMENT_TYPE, page_count: 0, image_url: '', summary: '', language: 'Tiếng Việt'
       });
     }
     setShowModal(true);
@@ -514,7 +435,7 @@ export default function Books() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.author_id) {
-      alert("Vui lòng chọn tác giả!");
+      alert("Vui lòng chọn Khoa | Viện | Trường!");
       return;
     }
     try {
@@ -572,7 +493,7 @@ export default function Books() {
           </div>
 
           <div className="w-full md:w-48">
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase">Tác giả</label>
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase">Khoa | Viện | Trường</label>
             <AuthorSelect
               authors={authors}
               value={authorFilter}
@@ -581,24 +502,25 @@ export default function Books() {
           </div>
 
           <div className="w-full md:w-48">
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase">Chủ đề</label>
-            <SubjectSelect
-              subjects={subjects}
-              value={subjectFilter}
-              onChange={setSubjectFilter}
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase">Học phần</label>
+            <CourseSelect
+              courses={courses}
+              value={courseFilter}
+              onChange={setCourseFilter}
             />
           </div>
 
           <div className="w-full md:w-40">
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase">Loại sách</label>
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase">Loại tài liệu</label>
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value)}
               className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 outline-none h-[38px]"
             >
               <option value="">Tất cả loại</option>
-              <option value="FREE">Miễn phí</option>
-              <option value="PREMIUM">Trả phí</option>
+              {DOCUMENT_TYPES.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
             </select>
           </div>
 
@@ -618,11 +540,11 @@ export default function Books() {
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Ảnh</th>
               <th className="px-4 py-3">Tiêu đề</th>
-              <th className="px-4 py-3">Tác giả</th>
-              <th className="px-4 py-3">Chủ đề</th>
+              <th className="px-4 py-3">Khoa | Viện | Trường</th>
+              <th className="px-4 py-3">Học phần</th>
               <th className="px-4 py-3">Loại</th>
               <th className="px-4 py-3">Ngôn ngữ</th>
-              <th className="px-4 py-3">Số chương</th>
+              <th className="px-4 py-3">Số lượng tài liệu</th>
               <th className="px-4 py-3">Tùy chọn</th>
             </tr>
           </thead>
@@ -637,41 +559,36 @@ export default function Books() {
                 <td className="px-4 py-3">{b.id}</td>
                 <td className="px-4 py-3">
                   <img
-                    src={b.image_url || 'https://via.placeholder.com/40'}
+                    src={b.image_url || '/placeholder-book.svg'}
                     alt={b.title}
                     className="w-10 h-14 object-cover rounded border border-slate-200 dark:border-slate-700"
-                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/40?text=Book'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-book.svg'; }}
                   />
                 </td>
                 <td className="px-4 py-3 font-medium">{b.title}</td>
                 <td className="px-4 py-3 text-slate-600">
-                  {b.author?.name || b.author_name || 'N/A'}
+                  {b.faculty?.name || b.author?.name || b.faculty_name || b.author_name || 'N/A'}
                 </td>
                 <td className="px-4 py-3 text-slate-600">
                   <div className="flex flex-wrap gap-1">
-                    {b.subjects && b.subjects.length > 0 ? (
-                      b.subjects.slice(0, 3).map(s => (
-                        <span key={s.id} className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded">
-                          {s.name}
-                        </span>
-                      ))
+                    {b.course || b.subject ? (
+                      <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded">
+                        {(b.course || b.subject).code ? `${(b.course || b.subject).code} - ${(b.course || b.subject).name}` : (b.course || b.subject).name}
+                      </span>
                     ) : (
                       <span className="text-xs text-slate-400">Trống</span>
-                    )}
-                    {b.subjects && b.subjects.length > 3 && (
-                      <span className="text-xs text-slate-400">+{b.subjects.length - 3}</span>
                     )}
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${b.type === 'PREMIUM' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30' : 'bg-green-100 text-green-700 dark:bg-green-900/30'}`}>
-                    {b.type || 'FREE'}
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                    {b.type_raw || b.type || DEFAULT_DOCUMENT_TYPE}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-600">{b.language || 'Tiếng Việt'}</td>
-                <td className="px-4 py-3 text-slate-600">{b.chapter_count || 0}</td>
+                <td className="px-4 py-3 text-slate-600">{b.link_count || b.document_count || b.links?.length || 0}</td>
                 <td className="px-4 py-3">
-                  <button onClick={() => handleOpenChapterModal(b)} className="p-2 text-purple-600 hover:bg-purple-50 rounded-full transition-colors" title="Quản lý chương"><BookOpen size={18} /></button>
+                  <button onClick={() => handleOpenChapterModal(b)} className="p-2 text-purple-600 hover:bg-purple-50 rounded-full transition-colors" title="Quản lý tài liệu"><BookOpen size={18} /></button>
                   <button onClick={() => handleOpenModal(b)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors mr-1" title="Sửa"><Pencil size={18} /></button>
                   <button onClick={() => handleDelete(b.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Xóa"><Trash2 size={18} /></button>
                 </td>
@@ -709,38 +626,38 @@ export default function Books() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tác giả <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Khoa | Viện | Trường <span className="text-red-500">*</span></label>
                     <AuthorSelect
                       authors={authors}
                       value={formData.author_id}
                       onChange={(id) => setFormData({ ...formData, author_id: id })}
-                      placeholder="Chọn tác giả..."
+                      placeholder="Chọn Khoa | Viện | Trường..."
                     />
                   </div>
 
 
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Số chương</label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Số lượng tài liệu</label>
                     <input
                       type="number"
-                      readOnly={!!editingBook}
+                      readOnly
                       min="0"
-                      value={formData.chapter_count || 0}
-                      onChange={e => setFormData({ ...formData, chapter_count: e.target.value })}
-                      className={`w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 text-sm ${editingBook ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : 'bg-white dark:bg-slate-900'}`}
+                      value={formData.document_count || 0}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 text-sm bg-slate-100 dark:bg-slate-800 cursor-not-allowed"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Loại sách</label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Loại tài liệu</label>
                     <select
                       value={formData.type}
                       onChange={e => setFormData({ ...formData, type: e.target.value })}
                       className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary/50 text-sm"
                     >
-                      <option value="FREE">Miễn phí (FREE)</option>
-                      <option value="PREMIUM">Trả phí (PREMIUM)</option>
+                      {DOCUMENT_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -755,11 +672,12 @@ export default function Books() {
                   </div>
 
                   <div className="flex flex-col gap-1.5 md:col-span-1">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Chủ đề</label>
-                    <MultiSubjectSelect
-                      subjects={subjects}
-                      value={formData.subjectIds}
-                      onChange={(newIds) => setFormData({ ...formData, subjectIds: newIds })}
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Học phần</label>
+                    <CourseSelect
+                      courses={courses}
+                      value={formData.courseId}
+                      onChange={(id) => setFormData({ ...formData, courseId: id })}
+                      placeholder="Chọn học phần..."
                     />
                   </div>
                 </div>
@@ -852,7 +770,7 @@ export default function Books() {
                 {selectedChapter ? (
                   <>
                     <h3 className="text-xl font-bold mb-4 dark:text-white">
-                      {selectedChapter.id ? `Chỉnh sửa chương ${selectedChapter.chapter_number}` : 'Thêm chương mới'}
+                      {selectedChapter.readOnly ? `Tài liệu ${selectedChapter.chapter_number}` : selectedChapter.id ? `Chỉnh sửa chương ${selectedChapter.chapter_number}` : 'Thêm chương mới'}
                     </h3>
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
@@ -862,6 +780,7 @@ export default function Books() {
                           type="text"
                           className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                           value={chapterForm.title}
+                          disabled={selectedChapter.readOnly}
                           onChange={e => setChapterForm({ ...chapterForm, title: e.target.value })}
                         />
                       </div>
@@ -871,6 +790,7 @@ export default function Books() {
                           type="number"
                           className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                           value={chapterForm.chapter_number}
+                          disabled={selectedChapter.readOnly}
                           onChange={e => setChapterForm({ ...chapterForm, chapter_number: e.target.value })}
                         />
                       </div>
@@ -883,7 +803,7 @@ export default function Books() {
                         className={`w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white text-sm ${chapterForm.content ? 'bg-slate-100 cursor-not-allowed opacity-60 dark:bg-slate-700' : ''}`}
                         placeholder="https://drive.google.com/file/d/..."
                         value={chapterForm.drive_link}
-                        disabled={!!chapterForm.content}
+                        disabled={selectedChapter.readOnly || !!chapterForm.content}
                         onChange={e => setChapterForm({ ...chapterForm, drive_link: e.target.value })}
                       />
                     </div>
@@ -893,13 +813,13 @@ export default function Books() {
                       <textarea
                         className={`flex-1 w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white font-mono text-sm resize-none ${chapterForm.drive_link ? 'bg-slate-100 cursor-not-allowed opacity-60 dark:bg-slate-700' : ''}`}
                         value={chapterForm.content}
-                        disabled={!!chapterForm.drive_link}
+                        disabled={selectedChapter.readOnly || !!chapterForm.drive_link}
                         onChange={e => setChapterForm({ ...chapterForm, content: e.target.value })}
                       ></textarea>
                     </div>
 
                     <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700">
-                      {selectedChapter.id ? (
+                      {selectedChapter.id && !selectedChapter.readOnly ? (
                         <button
                           onClick={() => handleDeleteChapter(selectedChapter.id)}
                           className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium flex items-center gap-2"
@@ -909,12 +829,23 @@ export default function Books() {
                       ) : (
                         <div></div>
                       )}
-                      <button
-                        onClick={handleSaveChapter}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 font-medium"
-                      >
-                        Lưu thay đổi
-                      </button>
+                      {selectedChapter.readOnly ? (
+                        <a
+                          href={chapterForm.drive_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 font-medium"
+                        >
+                          Mở tài liệu
+                        </a>
+                      ) : (
+                        <button
+                          onClick={handleSaveChapter}
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 font-medium"
+                        >
+                          Lưu thay đổi
+                        </button>
+                      )}
                     </div>
                   </>
                 ) : (

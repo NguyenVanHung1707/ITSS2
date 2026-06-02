@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Heart, BookOpen, Share2, ChevronRight, ArrowLeft } from "lucide-react";
+import { Heart, BookOpen, Share2, ChevronRight, ArrowLeft, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
@@ -26,6 +26,9 @@ export default function BookSection({ book: bookProp }) {
   const [loading, setLoading] = useState(false);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [submittingLink, setSubmittingLink] = useState(false);
+  const [linkForm, setLinkForm] = useState({ title: "", drive_link: "" });
   const [book, setBook] = useState(bookProp || null);
   const [showFullSummary, setShowFullSummary] = useState(false);
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -34,7 +37,7 @@ export default function BookSection({ book: bookProp }) {
   useEffect(() => {
     if (!bookProp && params.id) {
       setLoading(true);
-      axios.get(`/books/${params.id}`)
+      axios.get(`/documents/${params.id}`)
         .then(res => {
           setBook(res.data || res);
         })
@@ -100,7 +103,28 @@ export default function BookSection({ book: bookProp }) {
   // --- CÁC HÀM XỬ LÝ UI KHÁC GIỮ NGUYÊN ---
   const handleReadBook = () => {
     if (book?.id) {
-      navigate(`/book/${book.id}/read`);
+      navigate(`/document/${book.id}/read`);
+    }
+  };
+
+  const handleSubmitDocumentLink = async (event) => {
+    event.preventDefault();
+    if (!isAuthenticated) {
+      toast.error("Bạn cần đăng nhập để đóng góp tài liệu");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setSubmittingLink(true);
+      await axios.post(`/documents/${book.id}/links`, linkForm);
+      toast.success("Đã gửi tài liệu bổ sung. Vui lòng chờ admin kiểm duyệt.");
+      setLinkForm({ title: "", drive_link: "" });
+      setSubmitDialogOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || "Không thể gửi tài liệu");
+    } finally {
+      setSubmittingLink(false);
     }
   };
 
@@ -164,13 +188,61 @@ export default function BookSection({ book: bookProp }) {
                 <BookOpen className="h-4 w-4 mr-2" />
                 Đọc sách
               </Button>
+              <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full hover:bg-gray-100" variant="outline" size="lg">
+                    <FilePlus className="h-4 w-4 mr-2" />
+                    Đóng góp tài liệu
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Đóng góp tài liệu bổ sung</DialogTitle>
+                    <DialogDescription>
+                      Tài liệu bạn gửi sẽ được hiển thị sau khi admin kiểm duyệt.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmitDocumentLink} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-slate-700">Tên tài liệu</label>
+                      <input
+                        type="text"
+                        required
+                        value={linkForm.title}
+                        onChange={(event) => setLinkForm({ ...linkForm, title: event.target.value })}
+                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                        placeholder="Ví dụ: Đề thi cuối kỳ 2024.1"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-slate-700">Google Drive link</label>
+                      <input
+                        type="url"
+                        required
+                        value={linkForm.drive_link}
+                        onChange={(event) => setLinkForm({ ...linkForm, drive_link: event.target.value })}
+                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                        placeholder="https://drive.google.com/..."
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setSubmitDialogOpen(false)}>
+                        Hủy
+                      </Button>
+                      <Button type="submit" disabled={submittingLink}>
+                        {submittingLink ? "Đang gửi..." : "Gửi duyệt"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
           <div>
             <div className="flex items-start justify-between gap-3 mb-4">
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-2 text-balance">{book.title}</h1>
-                <p className="text-xl text-muted-foreground mb-4">{book.author?.name || book.author}</p>
+                <p className="text-xl text-muted-foreground mb-4">{book.faculty?.name || book.author?.name || book.author}</p>
                 <div className="text-sm text-muted-foreground mb-4 relative">
                   <span
                     className={
@@ -250,11 +322,9 @@ export default function BookSection({ book: bookProp }) {
                     </div>
                   </DialogContent>
                 </Dialog>
-                {book.type === 'FREE' ? (
-                  <Badge className="bg-green-400">Miễn phí</Badge>
-                ) : (
-                  <Badge className='bg-yellow-300' variant="secondary">Hội viên</Badge>
-                )}
+                <Badge className="bg-indigo-500 text-white">
+                  {book.type_raw || book.type || 'Khác'}
+                </Badge>
               </div>
             </div>
           </div>

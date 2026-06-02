@@ -1,39 +1,34 @@
 import axiosInstance from '../config/Axios-config.jsx';
 
 const AdminAuthorService = {
-  // Lấy danh sách tất cả tác giả (có phân trang)
   async getAllAuthors(params = {}) {
-    const res = await axiosInstance.get('/authors', { params });
-    return res?.data || [];
+    const res = await axiosInstance.get('/faculties', { params });
+    const data = res?.data ?? res;
+    return data?.faculties || data?.authors || data?.data || data || [];
   },
 
-  // Lấy chi tiết tác giả theo ID
   async getAuthorById(id) {
-    const res = await axiosInstance.get(`/authors/${id}`);
+    const res = await axiosInstance.get(`/faculties/${id}`);
     return res?.data;
   },
 
-  // Lấy sách của tác giả
   async getBooksByAuthor(id) {
-    const res = await axiosInstance.get(`/authors/${id}/books`);
+    const res = await axiosInstance.get('/documents', { params: { facultyId: id } });
     return res?.data || [];
   },
 
-  // Tạo tác giả mới (Admin only)
-  async createAuthor(authorData) {
-    const res = await axiosInstance.post('/authors', authorData);
+  async createAuthor(facultyData) {
+    const res = await axiosInstance.post('/faculties', facultyData);
     return res;
   },
 
-  // Cập nhật tác giả (Admin only)
-  async updateAuthor(id, authorData) {
-    const res = await axiosInstance.put(`/authors/${id}`, authorData);
+  async updateAuthor(id, facultyData) {
+    const res = await axiosInstance.put(`/faculties/${id}`, facultyData);
     return res;
   },
 
-  // Xóa tác giả (Admin only)
   async deleteAuthor(id) {
-    const res = await axiosInstance.delete(`/authors/${id}`);
+    const res = await axiosInstance.delete(`/faculties/${id}`);
     return res;
   }
 };

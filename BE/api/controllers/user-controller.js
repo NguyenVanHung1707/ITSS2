@@ -1,5 +1,4 @@
 import UserModel, { User } from "../models/user-model.js";
-import Subscription from "../models/subscription-model.js";
 class UserController {
   // Lấy thông tin profile của user hiện tại
   static async getProfile(req, res) {
@@ -17,30 +16,10 @@ class UserController {
         return res.status(404).json({ success: false, message: "User not found" });
       }
 
-      let packageDetails = null;
-
-      if (user.tier === 'PREMIUM') {
-        const activeSub = await Subscription.findOne({
-          where: {
-            user_id: userId,
-            status: 'ACTIVE'
-          },
-          order: [['expiry_date', 'DESC']], // Lấy gói mới nhất
-          raw: true
-        });
-
-        if (activeSub) {
-          packageDetails = activeSub.package_details;
-        }
-      }
-
-      // 3. Gán vào object user trả về
-      user.package_details = packageDetails;
-
       // 4. Trả về Frontend
       res.status(200).json({
         success: true,
-        data: user, // User lúc này đã có tier và package_details đầy đủ
+        data: user,
       });
 
     } catch (error) {
@@ -228,13 +207,12 @@ class UserController {
   // Admin: Lấy danh sách users
   static async getAllUsers(req, res) {
     try {
-      const { page = 1, limit = 10, role, tier, q } = req.query;
+      const { page = 1, limit = 10, role, q } = req.query;
 
       const result = await UserModel.findAll({
         page: parseInt(page),
         limit: parseInt(limit),
         role,
-        tier,
         q
       });
 
@@ -344,7 +322,7 @@ class UserController {
   static async updateUser(req, res) {
     try {
       const { userId } = req.params;
-      const { role, tier, fullName } = req.body;
+      const { role, fullName } = req.body;
 
       // Không cho phép admin tự hạ quyền chính mình
       if (userId === req.user.userId && role && role !== "ADMIN") {
@@ -368,9 +346,6 @@ class UserController {
 
       if (role && ["USER", "ADMIN"].includes(role)) {
         userInstance.role = role;
-      }
-      if (tier && ["FREE", "PREMIUM"].includes(tier)) {
-        userInstance.tier = tier;
       }
       if (fullName) {
         userInstance.full_name = fullName;
@@ -405,7 +380,7 @@ class UserController {
   // Admin: Tạo user mới
   static async createUser(req, res) {
     try {
-      const { email, password, fullName, role, tier } = req.body;
+      const { email, password, fullName, role } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({
@@ -428,7 +403,6 @@ class UserController {
         password,
         fullName,
         role: role || "USER",
-        tier: tier || "FREE",
       });
 
       res.status(201).json({

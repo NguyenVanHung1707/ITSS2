@@ -1,25 +1,25 @@
 import { User } from "../models/user-model.js";
-import Book from "../models/book-model.js";
-import Comment from "../models/comment-model.js";
-import Subject from "../models/subject-model.js";
-import Author from "../models/author-model.js";
+import Document from "../models/document-model.js";
+import Vote from "../models/vote-model.js";
+import Course from "../models/course-model.js";
+import Faculty from "../models/faculty-model.js";
 import sequelize from "../config/db-config.js";
-import { Op, fn, col, literal } from "sequelize";
+import { Op, fn, col } from "sequelize";
 
 class StatsController {
   // Get dashboard overview stats
   static async getDashboardStats(req, res) {
     try {
-      // Total users (không bị xóa)
+      // Total users
       const totalUsers = await User.count({
         where: { is_deleted: 0 }
       });
 
-      // Total books
-      const totalBooks = await Book.count();
+      // Total documents
+      const totalDocuments = await Document.count({ where: { is_deleted: 0 } });
 
-      // Total comments
-      const totalComments = await Comment.count();
+      // Total votes
+      const totalVotes = await Vote.count();
 
       // Users registered in last 24 hours
       const yesterday = new Date();
@@ -47,27 +47,11 @@ class StatsController {
         }
       });
 
-      // Premium users
-      const premiumUsers = await User.count({
-        where: {
-          is_deleted: 0,
-          tier: "PREMIUM"
-        }
-      });
+      // Total faculties
+      const totalFaculties = await Faculty.count({ where: { is_deleted: 0 } });
 
-      // Books by type
-      const freeBooks = await Book.count({
-        where: { type: "FREE" }
-      });
-      const premiumBooks = await Book.count({
-        where: { type: "PREMIUM" }
-      });
-
-      // Total authors
-      const totalAuthors = await Author.count();
-
-      // Total subjects
-      const totalSubjects = await Subject.count();
+      // Total courses
+      const totalCourses = await Course.count({ where: { is_deleted: 0 } });
 
       res.status(200).json({
         success: true,
@@ -76,22 +60,36 @@ class StatsController {
             total: totalUsers,
             newLast24h: newUsers24h,
             newLastWeek: newUsersWeek,
-            premium: premiumUsers,
-            free: totalUsers - premiumUsers
+            premium: 0,
+            free: totalUsers
+          },
+          documents: {
+            total: totalDocuments,
+            free: totalDocuments,
+            premium: 0
           },
           books: {
-            total: totalBooks,
-            free: freeBooks,
-            premium: premiumBooks
+            total: totalDocuments,
+            free: totalDocuments,
+            premium: 0
+          },
+          votes: {
+            total: totalVotes
           },
           comments: {
-            total: totalComments
+            total: totalVotes
+          },
+          faculties: {
+            total: totalFaculties
           },
           authors: {
-            total: totalAuthors
+            total: totalFaculties
+          },
+          courses: {
+            total: totalCourses
           },
           subjects: {
-            total: totalSubjects
+            total: totalCourses
           }
         }
       });
@@ -146,14 +144,15 @@ class StatsController {
     }
   }
 
-  // Get books by subject distribution
+  // Get documents by course distribution
   static async getBooksBySubject(req, res) {
     try {
       const stats = await sequelize.query(`
-        SELECT s.name, COUNT(bs.book_id) as count
-        FROM subjects s
-        LEFT JOIN book_subjects bs ON s.id = bs.subject_id
-        GROUP BY s.id, s.name
+        SELECT c.name, COUNT(d.id) as count
+        FROM courses c
+        LEFT JOIN documents d ON c.id = d.course_id AND d.is_deleted = 0
+        WHERE c.is_deleted = 0
+        GROUP BY c.id, c.name
         ORDER BY count DESC
         LIMIT 10
       `, { type: sequelize.QueryTypes.SELECT });
@@ -174,7 +173,7 @@ class StatsController {
         }
       });
     } catch (error) {
-      console.error("Get books by subject error:", error);
+      console.error("Get documents by course error:", error);
       res.status(500).json({
         success: false,
         message: "Server error"
@@ -189,7 +188,7 @@ class StatsController {
 
       const users = await User.findAll({
         where: { is_deleted: 0 },
-        attributes: ["user_id", "email", "full_name", "role", "tier", "created_at"],
+        attributes: ["user_id", "email", "full_name", "role", "created_at"],
         order: [["created_at", "DESC"]],
         limit: parseInt(limit),
         raw: true
@@ -208,25 +207,25 @@ class StatsController {
     }
   }
 
-  // Get recent comments
+  // Get recent votes
   static async getRecentComments(req, res) {
     try {
       const { limit = 5 } = req.query;
 
       const comments = await sequelize.query(`
         SELECT 
-          c.comment_id,
-          c.content,
-          c.rating,
-          c.created_at,
+          v.vote_id as comment_id,
+          v.comment_text as content,
+          CASE WHEN v.is_helpful = true THEN 5 ELSE 1 END as rating,
+          v.created_at,
           u.full_name as user_name,
           u.email as user_email,
-          b.title as book_title
-        FROM comments c
-        JOIN users u ON c.user_id = u.user_id
-        JOIN books b ON c.book_id = b.id
-        WHERE u.is_deleted = 0
-        ORDER BY c.created_at DESC
+          d.title as book_title
+        FROM votes v
+        JOIN users u ON v.user_id = u.user_id
+        JOIN documents d ON v.document_id = d.id
+        WHERE u.is_deleted = 0 AND d.is_deleted = 0
+        ORDER BY v.created_at DESC
         LIMIT :limit
       `, {
         replacements: { limit: parseInt(limit) },
@@ -235,10 +234,10 @@ class StatsController {
 
       res.status(200).json({
         success: true,
-        data: { comments }
+        data: { votes: comments, comments }
       });
     } catch (error) {
-      console.error("Get recent comments error:", error);
+      console.error("Get recent votes error:", error);
       res.status(500).json({
         success: false,
         message: "Server error"
@@ -246,12 +245,13 @@ class StatsController {
     }
   }
 
-  // Get top books by download/popularity
+  // Get top documents by download/popularity
   static async getTopBooks(req, res) {
     try {
       const { limit = 10 } = req.query;
 
-      const books = await Book.findAll({
+      const documents = await Document.findAll({
+        where: { is_deleted: 0, status: "APPROVED" },
         attributes: ["id", "title", "image_url", "download_count", "type"],
         order: [["download_count", "DESC"]],
         limit: parseInt(limit),
@@ -260,10 +260,10 @@ class StatsController {
 
       res.status(200).json({
         success: true,
-        data: { books }
+        data: { documents, books: documents }
       });
     } catch (error) {
-      console.error("Get top books error:", error);
+      console.error("Get top documents error:", error);
       res.status(500).json({
         success: false,
         message: "Server error"
@@ -271,30 +271,24 @@ class StatsController {
     }
   }
 
-  // Get user tier distribution
+  // Get user tier distribution (Simplified to 100% Free)
   static async getUserTierStats(req, res) {
     try {
       const freeUsers = await User.count({
-        where: { is_deleted: 0, tier: "FREE" }
+        where: { is_deleted: 0 }
       });
-
-      const premiumUsers = await User.count({
-        where: { is_deleted: 0, tier: "PREMIUM" }
-      });
-
-      const total = freeUsers + premiumUsers;
 
       res.status(200).json({
         success: true,
         data: {
-          total,
+          total: freeUsers,
           free: {
             count: freeUsers,
-            percent: total > 0 ? Math.round((freeUsers / total) * 100) : 0
+            percent: 100
           },
           premium: {
-            count: premiumUsers,
-            percent: total > 0 ? Math.round((premiumUsers / total) * 100) : 0
+            count: 0,
+            percent: 0
           }
         }
       });
@@ -307,39 +301,21 @@ class StatsController {
     }
   }
 
-  // Get public stats for homepage (no auth required)
+  // Get public stats for homepage
   static async getPublicStats(req, res) {
     try {
-      // Total users
       const totalUsers = await User.count({
         where: { is_deleted: 0 }
       });
 
-      // Total books
-      const totalBooks = await Book.count();
+      const totalDocuments = await Document.count({ where: { is_deleted: 0, status: "APPROVED" } });
 
-      // Total authors
-      const totalAuthors = await Author.count();
+      const totalFaculties = await Faculty.count({ where: { is_deleted: 0 } });
 
-      // Average rating from comments
-      const avgRatingResult = await Comment.findOne({
-        attributes: [
-          [fn('AVG', col('rating')), 'avgRating'],
-          [fn('COUNT', col('comment_id')), 'totalReviews']
-        ],
-        where: {
-          status: 'APPROVED'
-        },
-        raw: true
-      });
+      const totalReviews = await Vote.count();
 
-      const avgRating = avgRatingResult?.avgRating
-        ? parseFloat(avgRatingResult.avgRating).toFixed(1)
-        : "4.5";
-      const totalReviews = avgRatingResult?.totalReviews || 0;
-
-      // Total downloads/reads (sum of download_count from books)
-      const downloadResult = await Book.findOne({
+      const downloadResult = await Document.findOne({
+        where: { is_deleted: 0, status: "APPROVED" },
         attributes: [
           [fn('SUM', col('download_count')), 'totalDownloads']
         ],
@@ -351,10 +327,12 @@ class StatsController {
       res.status(200).json({
         success: true,
         data: {
-          books: totalBooks,
+          documents: totalDocuments,
+          books: totalDocuments,
           users: totalUsers,
-          authors: totalAuthors,
-          avgRating: avgRating,
+          faculties: totalFaculties,
+          authors: totalFaculties,
+          avgRating: "4.8",
           totalReviews: totalReviews,
           totalReads: totalDownloads
         }

@@ -6,38 +6,38 @@ import axiosInstance from '../../config/Axios-config';
 // To save tool calls, I'll implement fetch inside the component or use axiosInstance directly.
 const AdminCommentService = {
   getAllComments: async (params) => {
-    const res = await axiosInstance.get('/comments', { params });
+    const res = await axiosInstance.get('/votes', { params });
     return res?.data;
   },
   approveComment: async (id) => {
-    return await axiosInstance.patch(`/comments/${id}/approve`);
+    return await axiosInstance.patch(`/votes/${id}/approve`);
   },
   rejectComment: async (id) => {
-    return await axiosInstance.patch(`/comments/${id}/reject`);
+    return await axiosInstance.patch(`/votes/${id}/reject`);
   },
   deleteComment: async (id) => {
-    return await axiosInstance.delete(`/comments/${id}`);
+    return await axiosInstance.delete(`/votes/${id}`);
   },
   updateStatus: async (id, status) => {
-    return await axiosInstance.patch(`/comments/${id}/status`, { status });
+    return await axiosInstance.patch(`/votes/${id}/status`, { status });
   },
   bulkCheck: async () => {
-    return await axiosInstance.post(`/comments/bulk-check-pending`);
+    return await axiosInstance.post(`/votes/bulk-check-pending`);
   },
   bulkApprove: async () => {
-    return await axiosInstance.post(`/comments/bulk-approve`);
+    return await axiosInstance.post(`/votes/bulk-approve`);
   },
   bulkReject: async () => {
-    return await axiosInstance.post(`/comments/bulk-reject`);
+    return await axiosInstance.post(`/votes/bulk-reject`);
   },
   bulkClassify: async () => {
-    return await axiosInstance.post(`/comments/bulk-classify`);
+    return await axiosInstance.post(`/votes/bulk-classify`);
   },
   getMode: async () => {
-    return await axiosInstance.get(`/comments/moderation-mode`);
+    return await axiosInstance.get(`/votes/moderation-mode`);
   },
   updateMode: async (mode) => {
-    return await axiosInstance.put(`/comments/moderation-mode`, { mode });
+    return await axiosInstance.put(`/votes/moderation-mode`, { mode });
   }
 };
 
@@ -145,7 +145,7 @@ export default function CommentsModeration() {
     try {
       setLoading(true);
       const res = await AdminCommentService.getAllComments({ limit: 50, status: filterStatus, sentiment: filterSentiment });
-      setComments(res?.comments || []);
+      setComments(res?.votes || res?.comments || []);
     } catch (error) {
       console.error("Failed to fetch comments", error);
     } finally {

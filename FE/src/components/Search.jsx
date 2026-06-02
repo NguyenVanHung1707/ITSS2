@@ -31,8 +31,8 @@ const Search = ({ variant = "dynamic", className = "" }) => {
         }
         try {
             setLoading(true);
-            const res = await axios.get(`/books?keyword=${encodeURIComponent(term)}`);
-            const resultData = res.data?.books || [];
+            const res = await axios.get(`/documents?keyword=${encodeURIComponent(term)}`);
+            const resultData = res.data?.documents || res.data?.books || [];
             setSuggestions(Array.isArray(resultData) ? resultData.slice(0, 5) : []);
         } catch (error) {
             console.error("Live search error:", error);
@@ -134,7 +134,7 @@ const Search = ({ variant = "dynamic", className = "" }) => {
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onFocus={() => keyword && setShowDropdown(true)}
-                    placeholder="Tìm kiếm sách, tác giả..."
+                    placeholder="Tìm kiếm sách, Khoa | Viện | Trường..."
                     aria-label="Tìm kiếm sách"
                     className={inputClasses}
                 />
@@ -151,7 +151,7 @@ const Search = ({ variant = "dynamic", className = "" }) => {
             </div>
 
             {/* DROPDOWN LIVE SEARCH */}
-            {open && keyword && (
+            {showDropdown && keyword && (
                 <div className="absolute top-full mt-2 w-80 right-0 bg-white rounded-lg shadow-xl border border-slate-100 overflow-hidden">
                     {loading ? (
                         <div className="p-4 text-center text-slate-400 flex justify-center items-center gap-2">
@@ -163,16 +163,16 @@ const Search = ({ variant = "dynamic", className = "" }) => {
                             {suggestions.map((book) => (
                                 <li key={book.id} className="border-b border-slate-50 last:border-none">
                                     <Link
-                                        to={`/book/${book.id}`}
+                                        to={`/document/${book.id}`}
                                         className="px-4 py-3 hover:bg-slate-50 transition flex items-start gap-3"
-                                        onClick={() => setOpen(false)}
+                                        onClick={() => setShowDropdown(false)}
                                     >
                                         <div className="w-10 h-14 bg-slate-200 rounded shrink-0 overflow-hidden">
                                             <img src={book.image_url} className="w-full h-full object-cover" />
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium text-slate-800 line-clamp-1">{book.title}</p>
-                                            <p className="text-xs text-slate-500 line-clamp-1">{book.author?.name || "Tác giả ẩn danh"}</p>
+                                            <p className="text-xs text-slate-500 line-clamp-1">{book.faculty?.name || book.author?.name || "Khoa | Viện | Trường chưa cập nhật"}</p>
                                         </div>
                                     </Link>
                                 </li>

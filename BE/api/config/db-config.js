@@ -67,7 +67,7 @@ const sequelize = new Sequelize(databaseUrl, {
     idle: 10000,
   },
   dialectOptions:
-    NODE_ENV === "production"
+    process.env.DB_SSL === "true"
       ? {
           ssl: {
             require: true,

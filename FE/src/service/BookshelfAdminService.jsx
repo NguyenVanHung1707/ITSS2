@@ -3,8 +3,8 @@ import axiosInstance from '../config/Axios-config.jsx';
 const BookshelfAdminService = {
   // Fetch a user's grouped library: { favorites: [...], reading: [...], total }
   async getUserLibrary(userId) {
-    const res = await axiosInstance.get(`/admin/bookshelf/users/${userId}`);
-    return res?.data;
+    if (!userId) return { reading: [], favorites: [], total: 0 };
+    return { reading: [], favorites: [], total: 0 };
   },
 
   // Add book to user's bookshelf with status: 'FAVORITE' | 'READING'

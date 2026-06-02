@@ -14,11 +14,11 @@ import {
     SlidersHorizontal,
     SortAsc,
     BookOpen,
-    Users,
-    Tag
+    Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DOCUMENT_TYPES } from "@/constants/documentTypes";
 
 const SearchPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -35,8 +35,8 @@ const SearchPage = () => {
     const [totalResults, setTotalResults] = useState(0);
 
     // Filter states
-    const [selectedSubject, setSelectedSubject] = useState(searchParams.get('subjectId') || '');
-    const [selectedAuthor, setSelectedAuthor] = useState(searchParams.get('authorId') || '');
+    const [selectedSubject, setSelectedSubject] = useState(searchParams.get('courseId') || searchParams.get('subjectId') || '');
+    const [selectedAuthor, setSelectedAuthor] = useState(searchParams.get('facultyId') || searchParams.get('authorId') || '');
     const [selectedType, setSelectedType] = useState(searchParams.get('type') || '');
     const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
     const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
@@ -51,13 +51,18 @@ const SearchPage = () => {
         const fetchFilters = async () => {
             try {
                 const [subjectsRes, authorsRes] = await Promise.all([
-                    axios.get('/subjects?limit=100'), // Increase limit to get all for filter
-                    axios.get('/authors?limit=100')
+                    axios.get('/courses?limit=100'),
+                    axios.get('/faculties?limit=100')
                 ]);
 
                 // Handle Subjects
                 if (subjectsRes.success) {
-                    const subjectData = subjectsRes.data?.subjects || subjectsRes.data || [];
+                    const subjectData =
+                        subjectsRes.data?.courses ||
+                        subjectsRes.data?.subjects ||
+                        subjectsRes.data?.data ||
+                        subjectsRes.data ||
+                        [];
                     if (Array.isArray(subjectData)) {
                         setSubjects(subjectData);
                     } else {
@@ -68,7 +73,12 @@ const SearchPage = () => {
 
                 // Handle Authors
                 if (authorsRes.success) {
-                    const authorData = authorsRes.data?.authors || authorsRes.data || [];
+                    const authorData =
+                        authorsRes.data?.authors ||
+                        authorsRes.data?.faculties ||
+                        authorsRes.data?.data ||
+                        authorsRes.data ||
+                        [];
                     if (Array.isArray(authorData)) {
                         setAuthors(authorData);
                     } else {
@@ -102,12 +112,15 @@ const SearchPage = () => {
                 sort: sortBy
             };
 
-            if (selectedSubject) params.subjectId = selectedSubject;
-            if (selectedAuthor) params.authorId = selectedAuthor;
+            if (selectedSubject) params.courseId = selectedSubject;
+            if (selectedAuthor) params.facultyId = selectedAuthor;
             if (selectedType) params.type = selectedType;
 
-            const res = await axios.get('/books', { params });
-            const resultData = res.data?.books || [];
+            const res = await axios.get('/documents', { params });
+            const resultData =
+                res.data?.documents ||
+                res.data?.books ||
+                (Array.isArray(res.data) ? res.data : []);
 
             setBooks(Array.isArray(resultData) ? resultData : []);
 
@@ -157,12 +170,14 @@ const SearchPage = () => {
     };
 
     const updateFilter = (key, value) => {
-        if (key === 'subjectId') setSelectedSubject(value === selectedSubject ? '' : value);
-        if (key === 'authorId') setSelectedAuthor(value === selectedAuthor ? '' : value);
+        if (key === 'subjectId' || key === 'courseId') setSelectedSubject(value === selectedSubject ? '' : value);
+        if (key === 'authorId' || key === 'facultyId') setSelectedAuthor(value === selectedAuthor ? '' : value);
         if (key === 'type') setSelectedType(value === selectedType ? '' : value);
         if (key === 'sort') setSortBy(value);
 
         const params = new URLSearchParams(searchParams);
+        if (key === 'facultyId') params.delete('authorId');
+        if (key === 'courseId') params.delete('subjectId');
         if (value && value !== selectedSubject && value !== selectedAuthor && value !== selectedType) {
             params.set(key, value);
         } else {
@@ -260,7 +275,7 @@ const SearchPage = () => {
                                     type="text"
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
-                                    placeholder="Tìm kiếm sách, tác giả..."
+                                    placeholder="Tìm kiếm sách, Khoa | Viện | Trường..."
                                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
@@ -279,33 +294,6 @@ const SearchPage = () => {
                                 )}
                             </div>
 
-                            {/* Type Filter */}
-                            <FilterSection title="Loại sách" icon={Tag} totalItems={3}>
-                                <label className="flex items-center gap-3 cursor-pointer group">
-                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${selectedType === '' ? 'border-blue-600 bg-blue-600' : 'border-slate-300 group-hover:border-blue-400'}`}>
-                                        {selectedType === '' && <div className="w-2 h-2 rounded-full bg-white" />}
-                                    </div>
-                                    <input type="radio" name="type" className="hidden" checked={selectedType === ''} onChange={() => updateFilter('type', '')} />
-                                    <span className={`text-sm ${selectedType === '' ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>Tất cả</span>
-                                </label>
-                                <label className="flex items-center gap-3 cursor-pointer group">
-                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${selectedType === 'FREE' ? 'border-blue-600 bg-blue-600' : 'border-slate-300 group-hover:border-blue-400'}`}>
-                                        {selectedType === 'FREE' && <div className="w-2 h-2 rounded-full bg-white" />}
-                                    </div>
-                                    <input type="radio" name="type" className="hidden" checked={selectedType === 'FREE'} onChange={() => updateFilter('type', 'FREE')} />
-                                    <span className={`text-sm ${selectedType === 'FREE' ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>Miễn phí</span>
-                                </label>
-                                <label className="flex items-center gap-3 cursor-pointer group">
-                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${selectedType === 'PREMIUM' ? 'border-blue-600 bg-blue-600' : 'border-slate-300 group-hover:border-blue-400'}`}>
-                                        {selectedType === 'PREMIUM' && <div className="w-2 h-2 rounded-full bg-white" />}
-                                    </div>
-                                    <input type="radio" name="type" className="hidden" checked={selectedType === 'PREMIUM'} onChange={() => updateFilter('type', 'PREMIUM')} />
-                                    <span className={`text-sm ${selectedType === 'PREMIUM' ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>Premium</span>
-                                </label>
-                            </FilterSection>
-
-                            <div className="h-px bg-slate-100 my-4" />
-
                             {/* Subjects Filter */}
                             <FilterSection title="Chủ đề" icon={BookOpen} totalItems={sortedSubjects.length}>
                                 {Array.isArray(sortedSubjects) && sortedSubjects.map(subject => (
@@ -317,7 +305,7 @@ const SearchPage = () => {
                                             type="checkbox"
                                             className="hidden"
                                             checked={selectedSubject === String(subject.id)}
-                                            onChange={() => updateFilter('subjectId', String(subject.id))}
+                                            onChange={() => updateFilter('courseId', String(subject.id))}
                                         />
                                         <span className={`text-sm ${selectedSubject === String(subject.id) ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>{subject.name}</span>
                                     </label>
@@ -326,8 +314,27 @@ const SearchPage = () => {
 
                             <div className="h-px bg-slate-100 my-4" />
 
+                            <FilterSection title="Loại tài liệu" icon={BookOpen} totalItems={DOCUMENT_TYPES.length}>
+                                {DOCUMENT_TYPES.map(type => (
+                                    <label key={type} className="flex items-start gap-3 cursor-pointer group">
+                                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 mt-0.5 ${selectedType === type ? 'border-blue-600 bg-blue-600' : 'border-slate-300 group-hover:border-blue-400'}`}>
+                                            {selectedType === type && <CheckIcon />}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={selectedType === type}
+                                            onChange={() => updateFilter('type', type)}
+                                        />
+                                        <span className={`text-sm ${selectedType === type ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>{type}</span>
+                                    </label>
+                                ))}
+                            </FilterSection>
+
+                            <div className="h-px bg-slate-100 my-4" />
+
                             {/* Authors Filter */}
-                            <FilterSection title="Tác giả" icon={Users} totalItems={sortedAuthors.length}>
+                            <FilterSection title="Khoa | Viện | Trường" icon={Users} totalItems={sortedAuthors.length}>
                                 {Array.isArray(sortedAuthors) && sortedAuthors.map(author => (
                                     <label key={author.id} className="flex items-start gap-3 cursor-pointer group">
                                         <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 mt-0.5 ${selectedAuthor === String(author.id) ? 'border-blue-600 bg-blue-600' : 'border-slate-300 group-hover:border-blue-400'}`}>
@@ -337,7 +344,7 @@ const SearchPage = () => {
                                             type="checkbox"
                                             className="hidden"
                                             checked={selectedAuthor === String(author.id)}
-                                            onChange={() => updateFilter('authorId', String(author.id))}
+                                            onChange={() => updateFilter('facultyId', String(author.id))}
                                         />
                                         <span className={`text-sm ${selectedAuthor === String(author.id) ? 'text-slate-900 font-medium' : 'text-slate-600'}`}>{author.name}</span>
                                     </label>
@@ -363,7 +370,7 @@ const SearchPage = () => {
                                     type="text"
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
-                                    placeholder="Tìm kiếm sách, tác giả..."
+                                    placeholder="Tìm kiếm sách, Khoa | Viện | Trường..."
                                     className="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                                 />
                             </form>
@@ -382,7 +389,7 @@ const SearchPage = () => {
                                     <option value="oldest">Cũ nhất</option>
                                     <option value="a-z">Tên (A-Z)</option>
                                     <option value="z-a">Tên (Z-A)</option>
-                                    <option value="views">Phổ biến nhất</option>
+                                    <option value="downloads">Phổ biến nhất</option>
                                 </select>
                             </div>
                         </div>
@@ -402,22 +409,22 @@ const SearchPage = () => {
                         {/* Active Filters Display */}
                         {(selectedSubject || selectedAuthor || selectedType) && (
                             <div className="flex flex-wrap gap-2 mb-6">
-                                {selectedType && (
-                                    <Badge variant="secondary" className="px-3 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-1">
-                                        {selectedType === 'FREE' ? 'Miễn phí' : 'Premium'}
-                                        <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilter('type', '')} />
-                                    </Badge>
-                                )}
                                 {selectedSubject && (
                                     <Badge variant="secondary" className="px-3 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center gap-1">
                                         {subjects.find(s => String(s.id) === selectedSubject)?.name || 'Chủ đề'}
-                                        <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilter('subjectId', '')} />
+                                        <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilter('courseId', '')} />
                                     </Badge>
                                 )}
                                 {selectedAuthor && (
                                     <Badge variant="secondary" className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center gap-1">
-                                        {authors.find(a => String(a.id) === selectedAuthor)?.name || 'Tác giả'}
-                                        <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilter('authorId', '')} />
+                                        {authors.find(a => String(a.id) === selectedAuthor)?.name || 'Khoa | Viện | Trường'}
+                                        <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilter('facultyId', '')} />
+                                    </Badge>
+                                )}
+                                {selectedType && (
+                                    <Badge variant="secondary" className="px-3 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-1">
+                                        {selectedType}
+                                        <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilter('type', '')} />
                                     </Badge>
                                 )}
                                 <button onClick={clearFilters} className="text-xs text-slate-500 hover:text-red-500 underline ml-2">

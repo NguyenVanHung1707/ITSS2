@@ -10,7 +10,6 @@ export default function Users() {
   // Search & Filter State
   const [search, setSearch] = React.useState('');
   const [roleFilter, setRoleFilter] = React.useState('');
-  const [tierFilter, setTierFilter] = React.useState('');
 
   // Pagination State
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -20,7 +19,7 @@ export default function Users() {
 
   const [showModal, setShowModal] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState(null);
-  const [formData, setFormData] = React.useState({ role: 'USER', tier: 'FREE' });
+  const [formData, setFormData] = React.useState({ role: 'USER' });
 
   React.useEffect(() => {
     // Debounce search
@@ -28,7 +27,7 @@ export default function Users() {
       fetchUsers();
     }, 300);
     return () => clearTimeout(timer);
-  }, [currentPage, search, roleFilter, tierFilter]);
+  }, [currentPage, search, roleFilter]);
 
   const fetchUsers = async () => {
     try {
@@ -38,7 +37,6 @@ export default function Users() {
         limit: itemsPerPage,
         q: search,
         role: roleFilter,
-        tier: tierFilter
       };
 
       const res = await AdminUserService.getAllUsers(params);
@@ -48,7 +46,6 @@ export default function Users() {
         setTotalPages(res.totalPages || 0);
         setTotalItems(res.total || 0);
       } else if (res && res.data && res.data.users) {
-        // Handle inconsistent wrapping if legacy exists
         setUsers(res.data.users || []);
         setTotalPages(res.data.totalPages || 0);
         setTotalItems(res.data.total || 0);
@@ -70,7 +67,6 @@ export default function Users() {
     setEditingUser(user);
     setFormData({
       role: user.role || 'USER',
-      tier: user.tier || 'FREE'
     });
     setShowModal(true);
   };
@@ -106,7 +102,6 @@ export default function Users() {
           <h2 className="text-xl font-semibold">Quản lý Người dùng</h2>
           <p className="text-slate-500 dark:text-slate-400">Theo dõi và quản trị tài khoản người dùng.</p>
         </div>
-
       </div>
 
       {/* Standardized Filter Container */}
@@ -144,29 +139,12 @@ export default function Users() {
             </select>
           </div>
 
-          {/* Tier Filter */}
-          <div className="w-full md:w-auto">
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase">Hạng thành viên</label>
-            <select
-              id="tier-filter"
-              name="tier-filter"
-              className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 outline-none min-w-[150px]"
-              value={tierFilter}
-              onChange={(e) => { setTierFilter(e.target.value); setCurrentPage(1); }}
-            >
-              <option value="">Tất cả Tier</option>
-              <option value="FREE">Free</option>
-              <option value="PREMIUM">Premium</option>
-            </select>
-          </div>
-
           {/* Reset Button */}
           <div className="w-full md:w-auto">
             <button
               onClick={() => {
                 setSearch('');
                 setRoleFilter('');
-                setTierFilter('');
                 setCurrentPage(1);
               }}
               className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
@@ -178,7 +156,6 @@ export default function Users() {
       </div>
 
       <div className="p-4 pt-0">
-
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 dark:bg-slate-800/30 text-xs uppercase text-slate-500 dark:text-slate-400">
@@ -186,15 +163,14 @@ export default function Users() {
                 <th className="px-4 py-3">Tên</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Vai trò</th>
-                <th className="px-4 py-3">Hạng</th>
                 <th className="px-4 py-3 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
               {loading ? (
-                <tr><td colSpan="5" className="text-center py-4">Đang tải...</td></tr>
+                <tr><td colSpan="4" className="text-center py-4">Đang tải...</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan="5" className="text-center py-4">Không có dữ liệu</td></tr>
+                <tr><td colSpan="4" className="text-center py-4">Không có dữ liệu</td></tr>
               ) : users.map((u) => (
                 <tr key={u.user_id || u.id}>
                   <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{u.full_name}</td>
@@ -202,11 +178,6 @@ export default function Users() {
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                       {u.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${u.tier === 'PREMIUM' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
-                      {u.tier || 'FREE'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -265,19 +236,6 @@ export default function Users() {
                 >
                   <option value="USER">User (Thành viên thường)</option>
                   <option value="ADMIN">Admin (Quản trị viên)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Hạng thành viên (Tier)</label>
-                <select
-                  id="user-tier"
-                  name="tier"
-                  className="w-full px-3 py-2 border rounded-md dark:bg-slate-800 dark:border-slate-700"
-                  value={formData.tier}
-                  onChange={e => setFormData({ ...formData, tier: e.target.value })}
-                >
-                  <option value="FREE">Free (Miễn phí)</option>
-                  <option value="PREMIUM">Premium (Trả phí)</option>
                 </select>
               </div>
               <div>

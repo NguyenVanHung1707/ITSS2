@@ -15,7 +15,7 @@ function BookCard({ book, badgeIcon }) {
           {book.title}
         </h4>
         <p className="text-slate-500 text-xs line-clamp-1">
-          {book.Author?.name || (typeof book.author === 'object' ? book.author?.name : book.author) || 'Unknown'}
+          {book.faculty?.name || book.Author?.name || (typeof book.author === 'object' ? book.author?.name : book.author) || 'Unknown'}
         </p>
       </div>
       <div className="absolute left-2 top-2 p-1 bg-black/40 rounded backdrop-blur-sm text-white/90">

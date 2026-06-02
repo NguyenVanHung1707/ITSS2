@@ -1,4 +1,4 @@
-# BOOKSHELF API DOCUMENTATION
+﻿# BOOKSHELF API DOCUMENTATION
 
 Base URL: `http://backend:5000/api/bookshelf`
 
@@ -308,6 +308,6 @@ DELETE /bookshelf/books/1?status=FAVORITE
 2. **Status Values**: Chỉ có 2 giá trị: 'FAVORITE' và 'READING'
 3. **Auto Delete**: Khi xóa sách, tất cả liên kết với user cũng bị xóa (CASCADE)
 4. **Sorting**: Sách được sắp xếp theo thời gian thêm vào (mới nhất trước)
-5. **Book Info**: Bao gồm thông tin đầy đủ về tác giả và chủ đề
+5. **Book Info**: Bao gồm thông tin đầy đủ về Khoa | Viện | Trường và chủ đề
 
 ---

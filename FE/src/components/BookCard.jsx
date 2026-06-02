@@ -1,15 +1,14 @@
-import { Star, Crown, BookOpen } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 export default function BookCard({ book, subject }) {
     const navigate = useNavigate();
-    const imageUrl = book.image_url || book.imageUrl || "https://placehold.co/400x600?text=No+Image";
-    const authorName = typeof book.author === 'object' ? book.author?.name : book.author;
-    const isPremium = book.type === 'PREMIUM' || book.is_premium;
+    const imageUrl = book.image_url || book.imageUrl || "/placeholder-book.svg";
+    const authorName = book.faculty?.name || (typeof book.author === 'object' ? book.author?.name : book.author);
 
     return (
         <div
-            onClick={() => navigate(`/book/${book.id}`)}
+            onClick={() => navigate(`/document/${book.id}`)}
             className="group cursor-pointer relative"
         >
             {/* Book Cover Container */}
@@ -19,32 +18,12 @@ export default function BookCard({ book, subject }) {
                         src={imageUrl}
                         alt={book.title}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x600?text=Error"; }}
+                        onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder-book.svg"; }}
                     />
                 </div>
 
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-                {/* Badges - Premium */}
-                {isPremium && (
-                    <div className="absolute top-2 right-2">
-                        <div className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg backdrop-blur-sm">
-                            <Crown className="h-3 w-3 fill-white" />
-                            PREMIUM
-                        </div>
-                    </div>
-                )}
-
-                {/* Badges - Free */}
-                {!isPremium && (
-                    <div className="absolute top-2 right-2">
-                        <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-1 text-[10px] font-bold text-white shadow-lg backdrop-blur-sm">
-                            <BookOpen className="h-3 w-3" />
-                            FREE
-                        </div>
-                    </div>
-                )}
 
                 {/* Rating/Stats on hover */}
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 transition-opacity duration-300 group-hover:opacity-100">

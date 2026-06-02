@@ -6,14 +6,14 @@ import {
   Tag,
   BookMarked,
   Users as UsersIcon,
-  UserCheck,
   MessageSquareMore,
   Settings as SettingsIcon,
   LogOut,
   ChevronDown,
   BarChart3,
   Menu,
-  X
+  X,
+  FilePlus
 } from 'lucide-react';
 import AuthService from '../../service/AuthService';
 
@@ -63,17 +63,18 @@ function SidebarContent({ isDocumentsOpen, setIsDocumentsOpen, handleLogout, clo
 
             {isDocumentsOpen && (
               <div className="pl-10 pr-2 flex flex-col gap-1 mt-1 border-l border-slate-200 dark:border-slate-800 ml-4 animate-in slide-in-from-top-2 duration-200">
-                <SidebarLink to="/admin/books" icon={{ node: <Library size={16} /> }} label="Sách" onClick={closeMobileMenu} />
-                <SidebarLink to="/admin/authors" icon={{ node: <UsersIcon size={16} /> }} label="Tác giả" onClick={closeMobileMenu} />
-                <SidebarLink to="/admin/subjects" icon={{ node: <Tag size={16} /> }} label="Chủ đề" onClick={closeMobileMenu} />
+                <SidebarLink to="/admin/documents" icon={{ node: <Library size={16} /> }} label="Tài liệu" onClick={closeMobileMenu} />
+                <SidebarLink to="/admin/faculties" icon={{ node: <UsersIcon size={16} /> }} label="Khoa | Viện | Trường" onClick={closeMobileMenu} />
+                <SidebarLink to="/admin/courses" icon={{ node: <Tag size={16} /> }} label="Học phần" onClick={closeMobileMenu} />
+                <SidebarLink to="/admin/document-types" icon={{ node: <Tag size={16} /> }} label="Loại tài liệu" onClick={closeMobileMenu} />
+                <SidebarLink to="/admin/document-link-submissions" icon={{ node: <FilePlus size={16} /> }} label="Duyệt tài liệu gửi thêm" onClick={closeMobileMenu} />
                 <SidebarLink to="/admin/bookshelves" icon={{ node: <BookMarked size={16} /> }} label="Kệ sách" onClick={closeMobileMenu} />
               </div>
             )}
           </div>
           <SidebarLink to="/admin/users" icon={{ node: <UsersIcon size={16} /> }} label="Quản lý Người dùng" onClick={closeMobileMenu} />
-          <SidebarLink to="/admin/registrations" icon={{ node: <UserCheck size={16} /> }} label="Quản lý Đăng ký" onClick={closeMobileMenu} />
-          <SidebarLink to="/admin/comments" icon={{ node: <MessageSquareMore size={16} /> }} label="Kiểm duyệt Bình luận" onClick={closeMobileMenu} />
-          <SidebarLink to="/admin/analytics" icon={{ node: <BarChart3 size={16} /> }} label="Bình luận theo Sách" onClick={closeMobileMenu} />
+          <SidebarLink to="/admin/votes" icon={{ node: <MessageSquareMore size={16} /> }} label="Kiểm duyệt đánh giá" onClick={closeMobileMenu} />
+          <SidebarLink to="/admin/analytics" icon={{ node: <BarChart3 size={16} /> }} label="Đánh giá theo tài liệu" onClick={closeMobileMenu} />
           <SidebarLink to="/admin/settings" icon={{ node: <SettingsIcon size={16} /> }} label="Cài đặt" onClick={closeMobileMenu} />
         </nav>
       </div>

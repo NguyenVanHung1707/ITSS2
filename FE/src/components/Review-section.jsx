@@ -51,7 +51,7 @@ export function ReviewsSection({ bookId, refreshKey }) {
     if (!bookId) return;
     setLoading(true);
     axios
-      .get(`/comments/books/${bookId}/comments`)
+      .get(`/votes/documents/${bookId}/votes`)
       .then((res) => {
         const d = res.data; // interceptor trả về .data
         setReviews(
@@ -79,11 +79,11 @@ export function ReviewsSection({ bookId, refreshKey }) {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/comments/${editModal.commentId}`, {
+      await axios.put(`/votes/${editModal.commentId}`, {
         content: editModal.content,
         rating: Number(editModal.rating),
       });
-      const res = await axios.get(`/comments/books/${bookId}/comments`);
+      const res = await axios.get(`/votes/documents/${bookId}/votes`);
       const d = res.data;
       setReviews(
         (d?.comments || []).map((item) => ({
@@ -107,8 +107,8 @@ export function ReviewsSection({ bookId, refreshKey }) {
   const handleDeleteSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.delete(`/comments/${deleteModal.commentId}`);
-      const res = await axios.get(`/comments/books/${bookId}/comments`);
+      await axios.delete(`/votes/${deleteModal.commentId}`);
+      const res = await axios.get(`/votes/documents/${bookId}/votes`);
       const d = res.data;
       setReviews(
         (d?.comments || []).map((item) => ({

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="220" viewBox="0 0 160 220" role="img" aria-label="Book placeholder">
+  <rect width="160" height="220" rx="12" fill="#e2e8f0"/>
+  <rect x="28" y="34" width="104" height="142" rx="8" fill="#f8fafc"/>
+  <path d="M52 66h56M52 86h56M52 106h40" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M44 34v142" stroke="#cbd5e1" stroke-width="6"/>
+  <text x="80" y="198" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#64748b">No Image</text>
+</svg>

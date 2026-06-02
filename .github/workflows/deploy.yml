@@ -1,0 +1,63 @@
+name: CI/CD Pipeline - HUST Document Sharing System
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-test:
+    name: 🧪 CI - Verify & Build Compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify Backend Setup
+        working-directory: ./BE/api
+        run: |
+          npm ci
+          echo "Backend configuration successfully verified."
+
+      - name: Verify Frontend Compilation
+        working-directory: ./FE
+        run: |
+          npm ci
+          npm run build
+          echo "Frontend successfully compiled with zero errors."
+
+  deploy:
+    name: 🚀 CD - Deploy to VPS
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            # Exit on error
+            set -e
+
+            # Navigate to the project root directory
+            cd /root/ITSS2
+
+            # Pull latest updates from Git
+            git pull origin main || git pull origin master
+
+            # Rebuild and restart production containers
+            docker compose -f docker-compose.prod.yml up --build -d
+
+            # Clean up old unused docker images to save disk space
+            docker image prune -f
+
+            echo "✅ Project successfully deployed to https://thuvienso.io.vn/"

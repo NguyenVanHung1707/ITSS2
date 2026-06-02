@@ -1,12 +1,11 @@
 import { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route, useParams } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ProgressProvider } from './contexts/ProgressContext';
 import GlobalProgressTracker from './components/GlobalProgressTracker';
-import Chatbot from './components/Chatbot/Chatbot';
 // Admin imports
 import AdminLayout from './components/admin/AdminLayout';
 import RequireAdmin from './components/admin/RequireAdmin';
@@ -14,9 +13,10 @@ import Dashboard from './pages/admin/Dashboard';
 import Books from './pages/admin/Books';
 import Authors from './pages/admin/Authors';
 import Subjects from './pages/admin/Subjects';
+import DocumentTypes from './pages/admin/DocumentTypes';
+import DocumentLinkSubmissions from './pages/admin/DocumentLinkSubmissions';
 import Bookshelves from './pages/admin/Bookshelves';
 import Users from './pages/admin/Users';
-import Registrations from './pages/admin/Registrations';
 import CommentsModeration from './pages/admin/CommentsModeration';
 import BookAnalytics from './pages/admin/BookAnalytics';
 import Settings from './pages/admin/Settings';
@@ -27,8 +27,11 @@ const BookSection = lazy(() => import('./components/BookSection'));
 const BookShelf = lazy(() => import('./pages/BookShelf'));
 const Profile = lazy(() => import('./pages/Profile'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
-const Membership = lazy(() => import('./pages/Membership'));
-const Transactions = lazy(() => import('./pages/Transactions'))
+
+const LegacyDocumentRedirect = ({ read = false }) => {
+  const { id } = useParams();
+  return <Navigate to={`/document/${id}${read ? '/read' : ''}`} replace />;
+};
 
 const MainLayout = () => {
   return (
@@ -37,13 +40,13 @@ const MainLayout = () => {
         <Routes>
           <Route path="/homepage/*" element={<HomePage />} />
           <Route path="*" element={<HomePage />} />
-          <Route path="/book/:id/read" element={<Read />} />
-          <Route path="/book/:id" element={<BookSection />} />
+          <Route path="/document/:id/read" element={<Read />} />
+          <Route path="/document/:id" element={<BookSection />} />
+          <Route path="/book/:id/read" element={<LegacyDocumentRedirect read />} />
+          <Route path="/book/:id" element={<LegacyDocumentRedirect />} />
           <Route path="/bookshelf" element={<BookShelf />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/search" element={<SearchPage />} />
-          <Route path="/membership" element={<Membership />} />
-          <Route path="/transactions" element={<Transactions />} />
         </Routes>
       </Suspense>
     </div>
@@ -58,13 +61,18 @@ function AppContent() {
       {/* Admin routes */}
       <Route path='/admin' element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
         <Route index element={<Dashboard />} />
-        <Route path='books' element={<Books />} />
-        <Route path='authors' element={<Authors />} />
-        <Route path='subjects' element={<Subjects />} />
+        <Route path='documents' element={<Books />} />
+        <Route path='books' element={<Navigate to="/admin/documents" replace />} />
+        <Route path='faculties' element={<Authors />} />
+        <Route path='authors' element={<Navigate to="/admin/faculties" replace />} />
+        <Route path='courses' element={<Subjects />} />
+        <Route path='subjects' element={<Navigate to="/admin/courses" replace />} />
+        <Route path='document-types' element={<DocumentTypes />} />
+        <Route path='document-link-submissions' element={<DocumentLinkSubmissions />} />
         <Route path='bookshelves' element={<Bookshelves />} />
         <Route path='users' element={<Users />} />
-        <Route path='registrations' element={<Registrations />} />
-        <Route path='comments' element={<CommentsModeration />} />
+        <Route path='votes' element={<CommentsModeration />} />
+        <Route path='comments' element={<Navigate to="/admin/votes" replace />} />
         <Route path='analytics' element={<BookAnalytics />} />
         <Route path='settings' element={<Settings />} />
       </Route>
@@ -90,7 +98,6 @@ function App() {
         pauseOnHover
         theme="colored"
       />
-      <Chatbot />
     </ProgressProvider>
   )
 }

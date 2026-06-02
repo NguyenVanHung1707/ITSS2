@@ -39,21 +39,6 @@ const HeaderBar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const getSubscriptionText = () => {
-    if (!user) return "";
-    if (user.role === "ADMIN") return "Quản trị viên";
-    if (user.tier === "PREMIUM") {
-      const pkg = user.package_details;
-
-      if (pkg === "3_THANG") return "Hội viên 3 tháng";
-      if (pkg === "6_THANG") return "Hội viên 6 tháng";
-      if (pkg === "12_THANG") return "Hội viên 1 năm";
-
-      return "Hội viên Premium";
-    }
-    return "Gói thường";
-  };
-
   return (
     <header
       className={`border-b sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? "bg-white/80 backdrop-blur-md border-slate-200" : "bg-white/50 backdrop-blur-sm border-transparent"
@@ -79,32 +64,8 @@ const HeaderBar = () => {
             Khám phá
           </Button>
 
-          {/* Show Premium Button if not premium or guest */}
-          {(!isAuthenticated || (user && user.tier !== "PREMIUM" && user.role !== "ADMIN")) && (
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/membership')}
-              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              Premium
-            </Button>
-          )}
-
           {isAuthenticated ? (
             <>
-              {user?.role !== "admin" && user?.tier === "PREMIUM" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/membership')}
-                  className="hidden sm:flex border-amber-500 text-amber-700 bg-amber-50 hover:bg-amber-100"
-                >
-                  <Crown className='h-4 w-4 mr-2 text-amber-600' />
-                  {getSubscriptionText()}
-                </Button>
-              )}
-
               {user?.role === "admin" && (
                 <Link to="/admin/users">
                   <Button variant="ghost" size="sm">
@@ -131,22 +92,6 @@ const HeaderBar = () => {
 
                 <DropdownMenuContent align="end" className="w-56 mt-2">
                   <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem disabled>
-                    <span className="text-sm text-muted-foreground">
-                      Gói: <span className="font-medium text-slate-700">{getSubscriptionText()}</span>
-                    </span>
-                  </DropdownMenuItem>
-                  {user?.tier === "FREE" && (
-                    <DropdownMenuItem
-                      onClick={() => navigate("/membership")}
-                      className="cursor-pointer hover:bg-amber-50 text-amber-700 font-semibold"
-                    >
-                      <Zap className="h-4 w-4 mr-2 text-amber-500" />
-                      Nâng cấp ngay
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuSeparator />
 
                   {user?.role !== "admin" && (

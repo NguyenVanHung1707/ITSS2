@@ -1,0 +1,7 @@
+thuvienso.io.vn, www.thuvienso.io.vn {
+    # Reverse proxy to the frontend container (UI + internal API proxy)
+    reverse_proxy frontend:80
+
+    # Enable standard compression
+    encode gzip zstd
+}

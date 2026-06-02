@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Library,
   Users,
-  Star
+  Star,
+  Search
 } from 'lucide-react';
 import IntroHero from '../components/IntroHero';
 
@@ -24,7 +25,6 @@ gsap.registerPlugin(ScrollTrigger);
 const HomePage = () => {
   const [allBooks, setAllBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
-  const [premiumBooks, setPremiumBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ books: 0, authors: 0, users: 0 });
   const navigate = useNavigate();
@@ -33,18 +33,21 @@ const HomePage = () => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/books', { params: { limit: 50 } });
+        const response = await axios.get('/documents', { params: { limit: 50 } });
         if (response.success && response.data) {
-          const booksSource = response.data.books || (Array.isArray(response.data) ? response.data : []);
+          const booksSource =
+            response.data.documents ||
+            response.data.books ||
+            response.data.documents ||
+            (Array.isArray(response.data) ? response.data : []);
 
           const normalizedData = booksSource.map(book => ({
             ...book,
-            imageUrl: book.imageUrl || book.image_url || 'https://placehold.co/150x220?text=No+Image',
-            author: typeof book.author === 'object' ? book.author?.name : book.author
+            imageUrl: book.imageUrl || book.image_url || '/placeholder-book.svg',
+            author: book.faculty?.name || (typeof book.author === 'object' ? book.author?.name : book.author)
           }));
           setAllBooks(normalizedData);
           setFilteredBooks(normalizedData);
-          setPremiumBooks(normalizedData.filter(b => b.is_premium).slice(0, 8));
         }
       } catch (error) {
         console.error("Failed to fetch books:", error);
@@ -58,9 +61,9 @@ const HomePage = () => {
         const response = await axios.get('/public/stats');
         if (response.success && response.data) {
           setStats({
-            books: response.data.books || 0,
+            books: response.data.documents || response.data.books || 0,
             users: response.data.users || 0,
-            authors: response.data.authors || 0,
+            authors: response.data.faculties || response.data.authors || 0,
             avgRating: response.data.avgRating || "4.5",
             totalReads: response.data.totalReads || 0
           });
@@ -112,39 +115,6 @@ const HomePage = () => {
         }
       );
 
-      // Premium Section
-      if (document.querySelector(".gsap-premium-section")) {
-        gsap.fromTo(".gsap-premium-section",
-          { opacity: 0, y: 30 },
-          {
-            scrollTrigger: {
-              trigger: ".gsap-premium-section",
-              start: "top 80%",
-            },
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "power2.out"
-          }
-        );
-
-        gsap.fromTo(".gsap-premium-card",
-          { y: 30, opacity: 0 },
-          {
-            scrollTrigger: {
-              trigger: ".gsap-premium-section",
-              start: "top 70%",
-            },
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            stagger: 0.05,
-            ease: "power2.out",
-            delay: 0.2
-          }
-        );
-      }
-
       // All Books Header
       gsap.fromTo(".gsap-all-books-header",
         { opacity: 0, y: 20 },
@@ -177,7 +147,7 @@ const HomePage = () => {
       ScrollTrigger.refresh();
     });
     return () => ctx.revert();
-  }, [loading, premiumBooks]); // Re-run when data loads
+  }, [loading]); // Re-run when data loads
 
   const handleSearchResult = (results) => {
     setFilteredBooks(results || allBooks);
@@ -185,34 +155,34 @@ const HomePage = () => {
 
   const handleSelectBook = (book) => {
     if (book && book.id) {
-      navigate(`/book/${book.id}`);
+      navigate(`/document/${book.id}`);
     }
   };
 
   // Features data
   const features = [
     {
-      icon: <Sparkles className="h-8 w-8" />,
-      title: "Tóm tắt AI",
-      description: "Sử dụng công nghệ AI tiên tiến để tóm tắt nội dung sách, giúp bạn nắm bắt ý chính chỉ trong vài phút.",
-      color: "from-purple-500 to-indigo-600"
-    },
-    {
-      icon: <Headphones className="h-8 w-8" />,
-      title: "Đọc sách bằng giọng nói",
-      description: "Chuyển đổi văn bản thành giọng nói tự nhiên, đa dạng ngôn ngữ và cảm xúc, giúp bạn nghe sách mọi lúc mọi nơi.",
+      icon: <Search className="h-8 w-8" />,
+      title: "Tìm kiếm thông minh",
+      description: "Hệ thống tìm kiếm nâng cao theo tên sách, Khoa | Viện | Trường, thể loại một cách nhanh chóng và chính xác.",
       color: "from-blue-500 to-cyan-600"
     },
     {
       icon: <MessageCircle className="h-8 w-8" />,
       title: "Chatbot Thư viện",
-      description: "Trợ lý ảo thông minh sẵn sàng giải đáp mọi thắc mắc về sách, tác giả và gợi ý sách phù hợp với sở thích của bạn.",
+      description: "Trợ lý ảo thông minh sẵn sàng giải đáp mọi thắc mắc về sách, Khoa | Viện | Trường và gợi ý sách phù hợp với sở thích của bạn.",
       color: "from-emerald-500 to-teal-600"
     },
     {
+      icon: <Library className="h-8 w-8" />,
+      title: "Tủ sách cá nhân",
+      description: "Lưu trữ những cuốn sách yêu thích của riêng bạn, theo dõi tiến trình đọc sách hàng ngày dễ dàng.",
+      color: "from-purple-500 to-indigo-600"
+    },
+    {
       icon: <BookOpen className="h-8 w-8" />,
-      title: "Truyện tranh AI",
-      description: "Biến những trang sách chữ thành những khung hình truyện tranh sinh động với hình ảnh minh họa độc đáo được tạo bởi AI.",
+      title: "Kho sách phong phú",
+      description: "Hàng ngàn đầu sách thuộc nhiều thể loại đa dạng hoàn toàn miễn phí, cập nhật liên tục mỗi tuần.",
       color: "from-orange-500 to-rose-600"
     }
   ];
@@ -306,59 +276,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Premium Books Section */}
-      {premiumBooks.length > 0 && (
-        <section className="py-16 bg-linear-to-br from-amber-50 via-orange-50 to-yellow-50 gsap-premium-section">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-linear-to-br from-yellow-400 to-orange-500 rounded-xl text-white">
-                  <Crown className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Sách Premium</h2>
-                  <p className="text-slate-600 text-sm md:text-base">Trải nghiệm nội dung độc quyền, không quảng cáo và chất lượng cao dành riêng cho thành viên.</p>
-                </div>
-              </div>
-              <Link
-                to="/search?premium=true"
-                className="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg text-amber-600 font-medium hover:bg-amber-50 transition-colors border border-amber-200"
-              >
-                Xem tất cả
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {premiumBooks.slice(0, 6).map(book => (
-                <div
-                  key={book.id}
-                  onClick={() => handleSelectBook(book)}
-                  className="group cursor-pointer gsap-premium-card"
-                >
-                  <div className="relative rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow">
-                    <img
-                      src={book.imageUrl || book.image_url}
-                      alt={book.title}
-                      className="w-full aspect-2/3 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute top-2 right-2">
-                      <span className="px-2 py-1 bg-linear-to-r from-yellow-400 to-orange-500 text-xs font-bold text-white rounded-full">
-                        PREMIUM
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <h3 className="font-medium text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">{book.title}</h3>
-                    <p className="text-sm text-slate-500 line-clamp-1">{book.author}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* All Books Section */}
       <main id="books-section" className="container mx-auto px-4 py-16">
@@ -386,35 +304,34 @@ const HomePage = () => {
               {/* Shining Effect */}
               <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
 
-              <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-linear-to-br from-yellow-400 to-amber-600 shadow-lg shadow-orange-500/20 mb-8 group-hover:scale-110 transition-transform duration-500">
-                <Crown className="h-10 w-10 text-white" />
+              <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 mb-8 group-hover:scale-110 transition-transform duration-500 text-white">
+                <BookOpen className="h-10 w-10 text-white" />
               </div>
 
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Nâng cấp trải nghiệm <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text bg-linear-to-r from-yellow-200 via-amber-200 to-yellow-200 animate-gradient">
-                  Premium Member
+                Bắt đầu hành trình đọc sách <br className="hidden md:block" />
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-200 via-cyan-200 to-blue-200 animate-gradient">
+                  Hoàn toàn miễn phí
                 </span>
               </h2>
 
               <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Mở khóa toàn bộ kho sách AI, tính năng Text-to-Speech không giới hạn
-                và trải nghiệm đọc sách không quảng cáo.
+                Khám phá kho tàng tài liệu học tập vô tận của HUST. Tìm kiếm slide, đề thi, đề cương ôn tập và chia sẻ kiến thức hữu ích cùng cộng đồng.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  to="/membership"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-linear-to-r from-yellow-400 to-amber-600 text-white font-bold rounded-xl shadow-xl shadow-amber-500/20 hover:shadow-amber-500/40 hover:-translate-y-1 transition-all duration-300"
+                  to="/search"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-1 transition-all duration-300"
                 >
-                  <Crown className="h-5 w-5" />
-                  Xem các gói Premium
+                  <Search className="h-5 w-5" />
+                  Khám phá ngay
                 </Link>
                 <Link
                   to="/register"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 text-white font-semibold rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
                 >
-                  Tạo tài khoản miễn phí
+                  Tạo tài khoản mới
                 </Link>
               </div>
 
@@ -444,7 +361,7 @@ const HomePage = () => {
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Tìm kiếm sách</span></li>
                 <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Thể loại</span></li>
-                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Tác giả</span></li>
+                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Khoa | Viện | Trường</span></li>
               </ul>
             </div>
             <div>
@@ -460,7 +377,6 @@ const HomePage = () => {
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><Link to="/login" className="hover:text-white transition-colors">Đăng nhập</Link></li>
                 <li><Link to="/register" className="hover:text-white transition-colors">Đăng ký</Link></li>
-                <li><Link to="/membership" className="hover:text-white transition-colors">Gói Premium</Link></li>
               </ul>
             </div>
           </div>

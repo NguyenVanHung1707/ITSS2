@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Search, BookOpen } from 'lucide-react';
 import axiosInstance from '../../config/Axios-config';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 const COLORS = {
     POSITIVE: '#22c55e', // Green
@@ -36,10 +36,16 @@ const BookAnalytics = () => {
         try {
             setLoadingBooks(true);
             // Use new endpoint to get only books with comments
-            const res = await axiosInstance.get('/comments/books-with-comments', { params: { limit: 100 } });
-            setBooks(res?.data || []);
+            const res = await axiosInstance.get('/votes/documents-with-votes', { params: { limit: 100 } });
+            const booksData =
+                res?.data?.books ||
+                res?.books ||
+                (Array.isArray(res?.data) ? res.data : []) ||
+                [];
+            setBooks(Array.isArray(booksData) ? booksData : []);
         } catch (error) {
             console.error("Error fetching books:", error);
+            setBooks([]);
         } finally {
             setLoadingBooks(false);
         }
@@ -55,8 +61,8 @@ const BookAnalytics = () => {
                 params.sentiment = sentiment;
             }
 
-            const commentsRes = await axiosInstance.get(`/comments/books/${bookId}/comments`, { params });
-            setBookComments(commentsRes?.data?.comments || []);
+            const commentsRes = await axiosInstance.get(`/votes/documents/${bookId}/votes`, { params });
+            setBookComments(commentsRes?.data?.votes || commentsRes?.data?.comments || []);
 
             // Fetch Sentiment Stats (only once or always? Always is fine to keep chart updated if needed, but chart usually visualizes ALL comments)
             // Ideally chart shows breakdown of ALL comments, while list shows filtered.
@@ -64,8 +70,13 @@ const BookAnalytics = () => {
             // If just filter changed, maybe don't fetch stats? 
             // Let's refactor: Fetch stats only when book changes. Fetch comments when book OR filter changes.
             if (sentiment === 'ALL' || !sentimentStats) {
-                const statsRes = await axiosInstance.get('/comments/sentiment-stats', { params: { bookId } });
-                setSentimentStats(statsRes?.data || null);
+                const statsRes = await axiosInstance.get('/votes/sentiment-stats', { params: { documentId: bookId } });
+                const stats = statsRes?.data || statsRes || null;
+                setSentimentStats(stats ? {
+                    POSITIVE: stats.POSITIVE ?? stats.positive ?? 0,
+                    NEUTRAL: stats.NEUTRAL ?? stats.neutral ?? 0,
+                    NEGATIVE: stats.NEGATIVE ?? stats.negative ?? 0,
+                } : null);
             }
 
         } catch (error) {
@@ -75,7 +86,9 @@ const BookAnalytics = () => {
         }
     };
 
-    const filteredBooks = books.filter(b => b.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredBooks = Array.isArray(books)
+        ? books.filter(b => (b.title || '').toLowerCase().includes(searchTerm.toLowerCase()))
+        : [];
 
     const chartData = sentimentStats ? [
         { name: 'Tích cực', value: sentimentStats.POSITIVE, color: COLORS.POSITIVE },
@@ -119,7 +132,7 @@ const BookAnalytics = () => {
                                         : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
                                         }`}
                                 >
-                                    <img src={book.cover_image || 'https://placehold.co/40x60'} alt="" className="w-8 h-10 object-cover rounded shadow-sm" />
+                                    <img src={book.cover_image || book.image_url || '/placeholder-book.svg'} alt="" className="w-8 h-10 object-cover rounded shadow-sm" />
                                     <div className="flex-1 min-w-0">
                                         <div className="truncate font-medium">{book.title}</div>
                                         <div className="text-xs text-slate-500">{book.commentCount || 0} bình luận</div>
@@ -144,24 +157,22 @@ const BookAnalytics = () => {
                                         <div className="flex items-center justify-center h-full"><Loader2 className="animate-spin" /></div>
                                     ) : sentimentStats ? (
                                         <div className="flex items-center h-full justify-center pb-6">
-                                            <div className="w-[300px] h-[200px]">
-                                                <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={chartData}
-                                                            innerRadius={60}
-                                                            outerRadius={80}
-                                                            paddingAngle={5}
-                                                            dataKey="value"
-                                                        >
-                                                            {chartData.map((entry, index) => (
-                                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip />
-                                                        <Legend />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
+                                            <div className="w-[300px] h-[200px] shrink-0">
+                                                <PieChart width={300} height={200}>
+                                                    <Pie
+                                                        data={chartData}
+                                                        innerRadius={60}
+                                                        outerRadius={80}
+                                                        paddingAngle={5}
+                                                        dataKey="value"
+                                                    >
+                                                        {chartData.map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip />
+                                                    <Legend />
+                                                </PieChart>
                                             </div>
                                             <div className="flex flex-col gap-3 ml-8">
                                                 {chartData.map(d => (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Plus, Users as UsersIcon, Library, UserPlus, MessageSquare, Crown, Loader2 } from 'lucide-react';
+import { Download, Plus, Users as UsersIcon, Library, UserPlus, MessageSquare, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdminStatsService from '../../service/AdminStatsService';
 
@@ -15,7 +15,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [statsRes, subjectRes, usersRes, commentsRes, regRes] = await Promise.all([
+        const [statsRes, subjectRes, usersRes, votesRes, regRes] = await Promise.all([
           AdminStatsService.getDashboardStats(),
           AdminStatsService.getBooksBySubject(),
           AdminStatsService.getRecentUsers(5),
@@ -26,7 +26,7 @@ export default function Dashboard() {
         if (statsRes.success) setStats(statsRes.data);
         if (subjectRes.success) setSubjectStats(subjectRes.data);
         if (usersRes.success) setRecentUsers(usersRes.data.users);
-        if (commentsRes.success) setRecentComments(commentsRes.data.comments);
+        if (votesRes.success) setRecentComments(votesRes.data.votes || votesRes.data.comments);
         if (regRes.success) setRegistrationData(regRes.data.registrations);
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
@@ -82,20 +82,16 @@ export default function Dashboard() {
     // User Stats
     csvContent += "=== THỐNG KÊ NGƯỜI DÙNG ===\n";
     csvContent += `Tổng số thành viên,${stats?.users?.total || 0}\n`;
-    csvContent += `Thành viên Premium,${stats?.users?.premium || 0}\n`;
-    csvContent += `Thành viên Free,${stats?.users?.free || 0}\n`;
     csvContent += `Đăng ký mới 24h,${stats?.users?.newLast24h || 0}\n`;
     csvContent += `Đăng ký mới 7 ngày,${stats?.users?.newLastWeek || 0}\n\n`;
 
     // Book Stats
     csvContent += "=== THỐNG KÊ SÁCH ===\n";
-    csvContent += `Tổng số sách,${stats?.books?.total || 0}\n`;
-    csvContent += `Sách Premium,${stats?.books?.premium || 0}\n`;
-    csvContent += `Sách Free,${stats?.books?.free || 0}\n\n`;
+    csvContent += `Tổng số sách,${stats?.books?.total || 0}\n\n`;
 
     // Comment Stats
     csvContent += "=== THỐNG KÊ BÌNH LUẬN ===\n";
-    csvContent += `Tổng số bình luận,${stats?.comments?.total || 0}\n\n`;
+    csvContent += `Tổng số đánh giá,${stats?.votes?.total || stats?.comments?.total || 0}\n\n`;
 
     // Registration Trend
     if (registrationData.length > 0) {
@@ -120,9 +116,9 @@ export default function Dashboard() {
     // Recent Users
     if (recentUsers.length > 0) {
       csvContent += "=== THÀNH VIÊN MỚI NHẤT ===\n";
-      csvContent += "Tên,Email,Ngày đăng ký,Gói\n";
+      csvContent += "Tên,Email,Ngày đăng ký\n";
       recentUsers.forEach(user => {
-        csvContent += `${user.full_name || 'Chưa đặt tên'},${user.email},${formatDate(user.created_at)},${user.tier}\n`;
+        csvContent += `${user.full_name || 'Chưa đặt tên'},${user.email},${formatDate(user.created_at)}\n`;
       });
     }
 
@@ -154,7 +150,7 @@ export default function Dashboard() {
       icon: <UsersIcon className="text-primary" size={20} />,
       title: 'Tổng thành viên',
       value: stats?.users?.total?.toLocaleString() || '0',
-      note: `${stats?.users?.premium || 0} Premium · ${stats?.users?.free || 0} Free`,
+      note: 'Thành viên hệ thống',
       badge: stats?.users?.newLast24h > 0 ? `+${stats.users.newLast24h} hôm nay` : 'Không có mới',
       badgeColor: stats?.users?.newLast24h > 0
         ? 'text-green-500 bg-green-50 dark:bg-green-500/10'
@@ -165,7 +161,7 @@ export default function Dashboard() {
       icon: <Library className="text-purple-500" size={20} />,
       title: 'Tổng đầu sách',
       value: stats?.books?.total?.toLocaleString() || '0',
-      note: `${stats?.books?.premium || 0} Premium · ${stats?.books?.free || 0} Free`,
+      note: 'Sách trong thư viện',
       badge: 'Thư viện',
       badgeColor: 'text-purple-500 bg-purple-50 dark:bg-purple-500/10'
     },
@@ -182,7 +178,7 @@ export default function Dashboard() {
       iconBg: 'bg-teal-50 dark:bg-teal-500/10',
       icon: <MessageSquare className="text-teal-500" size={20} />,
       title: 'Tổng bình luận',
-      value: stats?.comments?.total?.toLocaleString() || '0',
+      value: (stats?.votes?.total || stats?.comments?.total)?.toLocaleString() || '0',
       note: 'Đánh giá từ người đọc',
       badge: 'Reviews',
       badgeColor: 'text-teal-500 bg-teal-50 dark:bg-teal-500/10'
@@ -261,7 +257,7 @@ export default function Dashboard() {
             <Download size={18} />
             <span>Xuất báo cáo</span>
           </button>
-          <Link to="/admin/books" state={{ openAddModal: true }} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2">
+          <Link to="/admin/documents" state={{ openAddModal: true }} className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2">
             <Plus size={18} />
             <span>Thêm sách mới</span>
           </Link>
@@ -415,7 +411,6 @@ export default function Dashboard() {
                   <th className="px-6 py-4">Tên người dùng</th>
                   <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4">Ngày đăng ký</th>
-                  <th className="px-6 py-4 text-center">Gói</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
@@ -433,20 +428,11 @@ export default function Dashboard() {
                     </td>
                     <td className="px-6 py-4 text-slate-500">{user.email}</td>
                     <td className="px-6 py-4 text-slate-500">{formatDate(user.created_at)}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${user.tier === 'PREMIUM'
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                        : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
-                        }`}>
-                        {user.tier === 'PREMIUM' && <Crown size={12} />}
-                        {user.tier}
-                      </span>
-                    </td>
                   </tr>
                 ))}
                 {recentUsers.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
+                    <td colSpan={3} className="px-6 py-8 text-center text-slate-400">
                       Chưa có thành viên nào
                     </td>
                   </tr>
@@ -461,7 +447,7 @@ export default function Dashboard() {
           <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Bình luận gần đây</h3>
             <span className="bg-teal-100 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 text-xs font-bold px-2 py-1 rounded">
-              {stats?.comments?.total || 0} tổng
+              {stats?.votes?.total || stats?.comments?.total || 0} tổng
             </span>
           </div>
           <div className="flex-1 overflow-y-auto max-h-[300px] p-0">

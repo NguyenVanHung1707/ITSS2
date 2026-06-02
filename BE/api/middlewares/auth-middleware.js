@@ -22,6 +22,10 @@ export const authenticate = (req, res, next) => {
     }
 
     req.user = decoded;
+    // Normalize: JWT stores userId, some controllers expect user_id
+    if (decoded.userId && !decoded.user_id) {
+      req.user.user_id = decoded.userId;
+    }
     next();
   } catch (error) {
     return res.status(401).json({
@@ -40,6 +44,9 @@ export const optionalAuth = (req, res, next) => {
       const decoded = verifyAccessToken(token);
       if (decoded) {
         req.user = decoded;
+        if (decoded.userId && !decoded.user_id) {
+          req.user.user_id = decoded.userId;
+        }
       }
     }
 

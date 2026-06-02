@@ -35,7 +35,7 @@ const ReviewDialog = ({ bookId, onReviewAdded }) => {
         }
         setSubmitting(true);
         try {
-            await axios.post(`/comments/books/${bookId}/comments`, {
+            await axios.post(`/votes/documents/${bookId}/votes`, {
                 rating: rating,
                 content: comment,
             });

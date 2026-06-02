@@ -1,134 +1,69 @@
 import sequelize from "../config/db-config.js";
 
-// Import Sequelize model instances (named exports)
+// Import HUST models
 import { User } from "./user-model.js";
-import Book from "./book-model.js";
-import Author from "./author-model.js";
-import Subject from "./subject-model.js";
-import BookSubject from "./book_subject-model.js";
-import Comment from "./comment-model.js";
-import UserBookshelf from "./user-bookshelf-model.js";
-import Chapter from "./chapter-model.js";
-import Bookshelf from "./bookshelf-model.js";
-import BookBookshelf from "./book_bookshelf-model.js";
-import Subscription from "./subscription-model.js"
-import Task from "./task-model.js";
-import Translation from "./translation-model.js";
+import Faculty from "./faculty-model.js";
+import Course from "./course-model.js";
+import Document from "./document-model.js";
+import DocumentLink from "./document_link-model.js";
+import Vote from "./vote-model.js";
+import SearchHistory from "./search_history-model.js";
 import SystemSettings from "./system-settings-model.js";
 
-// Định nghĩa tất cả associations tại ĐÂY
+// Setup document-portal associations
 const setupAssociations = () => {
-  // Book - Author (Many to One)
-  Book.belongsTo(Author, { foreignKey: "author_id", as: "author" });
-  Author.hasMany(Book, { foreignKey: "author_id", as: "books" });
+  // Document - Faculty (Many to One)
+  Document.belongsTo(Faculty, { foreignKey: "faculty_id", as: "faculty" });
+  Faculty.hasMany(Document, { foreignKey: "faculty_id", as: "documents" });
 
-  // Book - Subject (Many to Many)
-  Book.belongsToMany(Subject, {
-    through: BookSubject,
-    foreignKey: "book_id",
-    otherKey: "subject_id",
-    as: "subjects",
-  });
-  Subject.belongsToMany(Book, {
-    through: BookSubject,
-    foreignKey: "subject_id",
-    otherKey: "book_id",
-    as: "books",
-  });
+  // Document - Course (Many to One)
+  Document.belongsTo(Course, { foreignKey: "course_id", as: "course" });
+  Course.hasMany(Document, { foreignKey: "course_id", as: "documents" });
 
-  // Book - Bookshelf (Many to Many)
-  Book.belongsToMany(Bookshelf, {
-    through: BookBookshelf,
-    foreignKey: "book_id",
-    otherKey: "bookshelf_id",
-    as: "bookshelves",
-  });
-  Bookshelf.belongsToMany(Book, {
-    through: BookBookshelf,
-    foreignKey: "bookshelf_id",
-    otherKey: "book_id",
-    as: "books",
-  });
+  // Document - DocumentLink (One to Many)
+  Document.hasMany(DocumentLink, { foreignKey: "document_id", as: "links", onDelete: 'CASCADE' });
+  DocumentLink.belongsTo(Document, { foreignKey: "document_id", as: "document" });
+  DocumentLink.belongsTo(User, { foreignKey: "user_id", as: "uploader" });
 
-  // User - Comment - Book
-  User.hasMany(Comment, { foreignKey: "user_id", as: "comments", onDelete: 'CASCADE' });
-  Comment.belongsTo(User, { foreignKey: "user_id", as: "user" });
+  // User - Document (UGC uploads)
+  Document.belongsTo(User, { foreignKey: "user_id", as: "uploader" });
+  User.hasMany(Document, { foreignKey: "user_id", as: "documents" });
 
-  Book.hasMany(Comment, { foreignKey: "book_id", as: "comments", onDelete: 'CASCADE' });
-  Comment.belongsTo(Book, { foreignKey: "book_id", as: "book" })
+  // User - Vote - Document
+  User.hasMany(Vote, { foreignKey: "user_id", as: "votes", onDelete: 'CASCADE' });
+  Vote.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-  // User - UserBookshelf - Book
-  User.belongsToMany(Book, {
-    through: UserBookshelf,
-    foreignKey: "user_id",
-    otherKey: "book_id",
-    as: "bookshelf",
-  });
+  Document.hasMany(Vote, { foreignKey: "document_id", as: "votes", onDelete: 'CASCADE' });
+  Vote.belongsTo(Document, { foreignKey: "document_id", as: "document" });
 
-  Book.belongsToMany(User, {
-    through: UserBookshelf,
-    foreignKey: "book_id",
-    otherKey: "user_id",
-    as: "users",
-  });
-
-  User.hasMany(UserBookshelf, { foreignKey: "user_id", as: "bookshelfItems", onDelete: 'CASCADE' });
-  UserBookshelf.belongsTo(User, { foreignKey: "user_id", as: "user" });
-
-  Book.hasMany(UserBookshelf, { foreignKey: "book_id", as: "bookshelfItems", onDelete: 'CASCADE' });
-  UserBookshelf.belongsTo(Book, { foreignKey: "book_id", as: "book" });
-
-  // Book - Chapter
-  Book.hasMany(Chapter, { foreignKey: "book_id", as: "chapters", onDelete: 'CASCADE' });
-  Chapter.belongsTo(Book, { foreignKey: "book_id", as: "book" });
-
-  // User - Subscription (One to Many)
-  User.hasMany(Subscription, { foreignKey: "user_id", as: "subscriptions" });
-  Subscription.belongsTo(User, { foreignKey: "user_id", as: "user" });
-
-  // Task - Chapter
-  Task.belongsTo(Chapter, { foreignKey: "chapter_id", as: "chapter" });
-  Chapter.hasMany(Task, { foreignKey: "chapter_id", as: "tasks" });
-
-  // Chapter - Translation
-  Chapter.hasMany(Translation, { foreignKey: "chapter_id", as: "translations" });
-  Translation.belongsTo(Chapter, { foreignKey: "chapter_id", as: "chapter" });
+  // User - SearchHistory (One to Many)
+  User.hasMany(SearchHistory, { foreignKey: "user_id", as: "searchHistories", onDelete: 'CASCADE' });
+  SearchHistory.belongsTo(User, { foreignKey: "user_id", as: "user" });
 };
 
-// Gọi setup associations
+// Initialize associations
 setupAssociations();
 
-// Export tất cả models
 export {
   sequelize,
   User,
-  Book,
-  Author,
-  Subject,
-  BookSubject,
-  Comment,
-  UserBookshelf,
-  Chapter,
-  Bookshelf,
-  BookBookshelf,
-  Subscription,
-  Task,
-  Translation,
+  Faculty,
+  Course,
+  Document,
+  DocumentLink,
+  Vote,
+  SearchHistory,
+  SystemSettings
 };
 
 export default {
   sequelize,
   User,
-  Book,
-  Author,
-  Subject,
-  BookSubject,
-  Comment,
-  UserBookshelf,
-  Chapter,
-  Bookshelf,
-  BookBookshelf,
-  Subscription,
-  Task,
-  Translation,
+  Faculty,
+  Course,
+  Document,
+  DocumentLink,
+  Vote,
+  SearchHistory,
+  SystemSettings
 };

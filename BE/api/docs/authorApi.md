@@ -1,77 +1,28 @@
-# Author API
+# Faculty API
 
-## Lấy danh sách tác giả
-- **GET** `/api/authors`
-- Response:
+## Lấy danh sách Khoa | Viện | Trường
+- **GET** `/api/faculties`
+
+## Lấy chi tiết Khoa | Viện | Trường
+- **GET** `/api/faculties/:id`
+
+## Tạo Khoa | Viện | Trường mới
+- **POST** `/api/faculties`
 ```json
 {
-  "success": true,
-  "data": [ ... ]
+  "name": "Tên Khoa | Viện | Trường",
+  "code": "Mã"
 }
 ```
 
-## Lấy chi tiết tác giả
-- **GET** `/api/authors/:id`
-- Response:
+## Sửa Khoa | Viện | Trường
+- **PUT** `/api/faculties/:id`
 ```json
 {
-  "success": true,
-  "data": { ... }
+  "name": "Tên Khoa | Viện | Trường",
+  "code": "Mã"
 }
 ```
 
-
-## Tạo tác giả mới
-- **POST** `/api/authors`
-- Body:
-```json
-{
-  "name": "Tên tác giả"
-}
-```
-- Response:
-```json
-{
-  "success": true,
-  "data": { ... },
-  "message": "Tạo tác giả thành công"
-}
-```
-
-
-## Sửa tác giả
-- **PUT** `/api/authors/:id`
-- Body:
-```json
-{
-  "name": "Tên mới"
-}
-```
-- Response:
-```json
-{
-  "success": true,
-  "data": { ... },
-  "message": "Cập nhật tác giả thành công"
-}
-```
-
-## Xóa tác giả
-- **DELETE** `/api/authors/:id`
-- Response:
-```json
-{
-  "success": true,
-  "message": "Xóa tác giả thành công"
-}
-```
-
-## Lấy sách của tác giả
-- **GET** `/api/authors/:id/books`
-- Response:
-```json
-{
-  "success": true,
-  "data": [ ... ]
-}
-```
+## Xóa Khoa | Viện | Trường
+- **DELETE** `/api/faculties/:id`

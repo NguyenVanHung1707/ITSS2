@@ -39,10 +39,6 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: "USER",
     },
-    tier: {
-      type: DataTypes.ENUM("FREE", "PREMIUM"),
-      defaultValue: "FREE",
-    },
     refresh_token: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -76,7 +72,7 @@ User.prototype.toJSON = function () {
 };
 
 class UserModel {
-  static async create({ email, password, fullName, role = "USER", tier = "FREE" }) {
+  static async create({ email, password, fullName, role = "USER" }) {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -84,7 +80,6 @@ class UserModel {
       password_hash: passwordHash,
       full_name: fullName,
       role,
-      tier,
     });
 
     return {
@@ -106,7 +101,7 @@ class UserModel {
   static async findById(userId) {
     return await User.findOne({
       where: { user_id: userId, is_deleted: 0 },
-      attributes: ["user_id", "email", "full_name", "role", "tier", "created_at"],
+      attributes: ["user_id", "email", "full_name", "role", "created_at"],
       raw: true,
     });
   }
@@ -202,16 +197,13 @@ class UserModel {
     return await User.count({ where: { ...conditions, is_deleted: 0 } });
   }
 
-  static async findAll({ page = 1, limit = 10, role = null, tier = null, q = null }) {
+  static async findAll({ page = 1, limit = 10, role = null, q = null }) {
     const offset = (page - 1) * limit;
     const { Op } = await import("sequelize");
     const where = { is_deleted: 0 };
 
     if (role) {
       where.role = role;
-    }
-    if (tier) {
-      where.tier = tier;
     }
     if (q) {
       where[Op.or] = [
@@ -222,7 +214,7 @@ class UserModel {
 
     const { count, rows } = await User.findAndCountAll({
       where,
-      attributes: ["user_id", "email", "full_name", "role", "tier", "created_at"],
+      attributes: ["user_id", "email", "full_name", "role", "created_at"],
       limit,
       offset,
       order: [["created_at", "DESC"]],
@@ -248,7 +240,7 @@ class UserModel {
           { full_name: { [Op.iLike]: `%${searchTerm}%` } },
         ],
       },
-      attributes: ["user_id", "email", "full_name", "role", "tier", "created_at"],
+      attributes: ["user_id", "email", "full_name", "role", "created_at"],
       limit: 10,
     });
   }

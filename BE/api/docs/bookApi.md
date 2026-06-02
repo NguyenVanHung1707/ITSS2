@@ -1,12 +1,12 @@
-# Book API
+﻿# Book API
 
 - **GET** `/api/books`
 - **Query Parameters:**
   - `page` (optional, default: 1): Số trang (bắt đầu từ 1).
   - `limit` (optional, default: 10): Số lượng sách mỗi trang.
   - `subjectId` (optional): Lọc theo ID chủ đề.
-  - `authorId` (optional): Lọc theo ID tác giả.
-  - `keyword` hoặc `q` (optional): Tìm kiếm theo tên sách hoặc tên tác giả.
+  - `facultyId` (optional): Lọc theo ID Khoa | Viện | Trường.
+  - `keyword` hoặc `q` (optional): Tìm kiếm theo tên sách hoặc tên Khoa | Viện | Trường.
   - `type` (optional): Lọc theo loại sách, ví dụ: `FREE`, `PREMIUM`.
   - `sort` (optional): Sắp xếp danh sách. Các giá trị hỗ trợ:
     - `newest` (mặc định): Mới nhất trước.
@@ -28,7 +28,7 @@
         "title": "Tên sách",
         "image_url": "http://...",
         "type": "FREE",
-        "author": { "name": "Tên tác giả" },
+        "author": { "name": "Tên Khoa | Viện | Trường" },
         "subjects": [ { "name": "Chủ đề 1" }, { "name": "Chủ đề 2" } ],
         "chapter_count": 10,
         "created_at": "2023-01-01T00:00:00.000Z"
@@ -56,7 +56,7 @@
 ```json
 {
   "title": "Tên sách",
-  "author_id": 1,
+  "faculty_id": 1,
   "description": "...",
   "published_year": 2023
 }
@@ -68,7 +68,7 @@
   "data": {
     "id": 1,
     "title": "Tên sách",
-    "author": { "name": "Tên tác giả" },
+    "author": { "name": "Tên Khoa | Viện | Trường" },
     "subjects": [ { "name": "Chủ đề 1" }, { "name": "Chủ đề 2" } ],
     ...
   },
@@ -87,7 +87,7 @@
   "data": {
     "id": 1,
     "title": "Tên sách",
-    "author": { "name": "Tên tác giả" },
+    "author": { "name": "Tên Khoa | Viện | Trường" },
     "subjects": [ { "name": "Chủ đề 1" }, { "name": "Chủ đề 2" } ],
     ...
   }

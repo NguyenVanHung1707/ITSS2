@@ -13,9 +13,8 @@ const AdminStatsService = {
     return response;
   },
 
-  // Get books distribution by subject
   getBooksBySubject: async () => {
-    const response = await axiosClient.get("/admin/stats/books-by-subject");
+    const response = await axiosClient.get("/admin/stats/documents-by-course");
     return response;
   },
 
@@ -25,15 +24,13 @@ const AdminStatsService = {
     return response;
   },
 
-  // Get recent comments
   getRecentComments: async (limit = 5) => {
-    const response = await axiosClient.get(`/admin/stats/recent-comments?limit=${limit}`);
+    const response = await axiosClient.get(`/admin/stats/recent-votes?limit=${limit}`);
     return response;
   },
 
-  // Get top books by download
   getTopBooks: async (limit = 10) => {
-    const response = await axiosClient.get(`/admin/stats/top-books?limit=${limit}`);
+    const response = await axiosClient.get(`/admin/stats/top-documents?limit=${limit}`);
     return response;
   },
 
