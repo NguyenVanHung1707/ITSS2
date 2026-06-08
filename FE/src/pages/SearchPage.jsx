@@ -250,6 +250,8 @@ const SearchPage = () => {
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <input
+                            id="mobile-search-input"
+                            name="mobile-search-input"
                             type="text"
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
@@ -303,6 +305,8 @@ const SearchPage = () => {
                                             {selectedSubject === String(subject.id) && <CheckIcon />}
                                         </div>
                                         <input
+                                            id={`subject-${subject.id}`}
+                                            name="subject-filter"
                                             type="checkbox"
                                             className="hidden"
                                             checked={selectedSubject === String(subject.id)}
@@ -312,9 +316,9 @@ const SearchPage = () => {
                                     </label>
                                 ))}
                             </FilterSection>
-
+ 
                             <div className="h-px bg-slate-100 my-4" />
-
+ 
                             <FilterSection title="Loại tài liệu" icon={BookOpen} totalItems={DOCUMENT_TYPES.length}>
                                 {DOCUMENT_TYPES.map(type => (
                                     <label key={type} className="flex items-start gap-3 cursor-pointer group">
@@ -322,6 +326,8 @@ const SearchPage = () => {
                                             {selectedType === type && <CheckIcon />}
                                         </div>
                                         <input
+                                            id={`type-${type}`}
+                                            name="type-filter"
                                             type="checkbox"
                                             className="hidden"
                                             checked={selectedType === type}
@@ -331,9 +337,9 @@ const SearchPage = () => {
                                     </label>
                                 ))}
                             </FilterSection>
-
+ 
                             <div className="h-px bg-slate-100 my-4" />
-
+ 
                             {/* Authors Filter */}
                             <FilterSection title="Khoa | Viện | Trường" icon={Users} totalItems={sortedAuthors.length}>
                                 {Array.isArray(sortedAuthors) && sortedAuthors.map(author => (
@@ -342,6 +348,8 @@ const SearchPage = () => {
                                             {selectedAuthor === String(author.id) && <CheckIcon />}
                                         </div>
                                         <input
+                                            id={`author-${author.id}`}
+                                            name="author-filter"
                                             type="checkbox"
                                             className="hidden"
                                             checked={selectedAuthor === String(author.id)}
@@ -368,6 +376,8 @@ const SearchPage = () => {
                             <form onSubmit={handleSearch} className="relative w-full sm:max-w-md hidden lg:block">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                                 <input
+                                    id="desktop-search-input"
+                                    name="desktop-search-input"
                                     type="text"
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
@@ -382,6 +392,8 @@ const SearchPage = () => {
                                     <span className="hidden sm:inline">Sắp xếp:</span>
                                 </div>
                                 <select
+                                    id="sort-select"
+                                    name="sort-select"
                                     value={sortBy}
                                     onChange={(e) => updateFilter('sort', e.target.value)}
                                     className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
