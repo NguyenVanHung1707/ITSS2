@@ -7,3 +7,5 @@ BE/scripts/
 Data/data.backup
 data_5500.backup
 certbot
+backup_hust_db.sql
+

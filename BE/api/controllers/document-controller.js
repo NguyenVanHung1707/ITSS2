@@ -79,13 +79,6 @@ export const getAllDocuments = async (req, res) => {
         model: Course,
         as: "course",
         attributes: ["id", "name", "code"]
-      },
-      {
-        model: DocumentLink,
-        as: "links",
-        where: { status: "APPROVED" },
-        required: false,
-        attributes: ["id", "title", "drive_link", "status"]
       }
     ];
 
@@ -206,6 +199,10 @@ export const getDocumentById = async (req, res) => {
         success: false,
         message: "Không tìm thấy tài liệu"
       });
+    }
+
+    if (document.links) {
+      document.links.sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { numeric: true, sensitivity: 'base' }));
     }
 
     res.json({
@@ -622,6 +619,9 @@ export const getDocumentChapters = async (req, res) => {
       where: { document_id: id, status: "APPROVED" },
       order: [["id", "ASC"]]
     });
+
+    // Sort links naturally by title (e.g. Week 2 before Week 10)
+    links.sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { numeric: true, sensitivity: 'base' }));
 
     // Map fields so frontend receives expected chapter schema
     const chapters = links.map((link, index) => ({

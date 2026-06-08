@@ -357,7 +357,7 @@ const HomePage = () => {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Khám phá</h4>
+              <h3 className="font-semibold mb-4 text-base">Khám phá</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Tìm kiếm sách</span></li>
                 <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Thể loại</span></li>
@@ -365,7 +365,7 @@ const HomePage = () => {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Tính năng</h4>
+              <h3 className="font-semibold mb-4 text-base">Tính năng</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Tóm tắt AI</span></li>
                 <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Text-to-Speech</span></li>
@@ -373,14 +373,14 @@ const HomePage = () => {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Tài khoản</h4>
+              <h3 className="font-semibold mb-4 text-base">Tài khoản</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><Link to="/login" className="hover:text-white transition-colors">Đăng nhập</Link></li>
                 <li><Link to="/register" className="hover:text-white transition-colors">Đăng ký</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
+          <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-400">
             <p>© 2024 Thư Viện Sách. All rights reserved.</p>
           </div>
         </div>

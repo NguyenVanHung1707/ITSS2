@@ -170,12 +170,12 @@ export default function BookSection({ book: bookProp }) {
           <Button variant="ghost" size="icon" onClick={() => navigate("/homepage/")} className="rounded-full hover:bg-slate-100">
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </Button>
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:font-medium transition-colors">
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground overflow-hidden">
+            <Link to="/" className="hover:font-medium transition-colors shrink-0 whitespace-nowrap">
               Trang chủ
             </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium line-clamp-1">{book.title}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" />
+            <span className="text-foreground font-medium line-clamp-1 truncate">{book.title}</span>
           </nav>
         </div>
         <div className="grid md:grid-cols-[300px_1fr] gap-8">
@@ -239,7 +239,7 @@ export default function BookSection({ book: bookProp }) {
             </div>
           </div>
           <div>
-            <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-2 text-balance">{book.title}</h1>
                 <p className="text-xl text-muted-foreground mb-4">{book.faculty?.name || book.author?.name || book.author}</p>
@@ -264,7 +264,7 @@ export default function BookSection({ book: bookProp }) {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 self-start sm:self-auto">
                 <Button className='hover:bg-gray-200' variant={isFavorite ? "default" : "outline"} size="icon" onClick={handleToggleFavorite}>
                   <Heart className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
                 </Button>

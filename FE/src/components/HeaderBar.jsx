@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '@/redux/Auth/AuthThunk';
 import Search from './Search';
@@ -19,8 +19,11 @@ import { setUser } from '@/redux/Auth/AuthSlice';
 const HeaderBar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const isSearchPage = location.pathname === '/search';
 
   // Lấy state auth
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -46,7 +49,7 @@ const HeaderBar = () => {
     >
       <div className='container mx-auto h-16 px-4 flex items-center justify-between'>
         {/* LOGO */}
-        <Link to="/" className='flex items-center gap-2 group'>
+        <Link to="/" aria-label="Trang chủ Thư Viện Sách" className='flex items-center gap-2 group'>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 text-white transition-transform group-hover:scale-105 shadow-md shadow-blue-200">
             <BookOpen className='h-5 w-5' />
           </div>
@@ -55,7 +58,7 @@ const HeaderBar = () => {
 
         {/* SEARCH BAR - DESKTOP */}
         <div className="hidden flex-1 max-w-md mx-8 md:block">
-          <Search variant="static" />
+          {!isSearchPage && <Search variant="static" />}
         </div>
 
         {/* NAVIGATION - DESKTOP */}
@@ -135,6 +138,7 @@ const HeaderBar = () => {
             size="icon"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="text-slate-600"
+            aria-label={isMenuOpen ? "Đóng menu" : "Mở menu"}
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
@@ -143,10 +147,12 @@ const HeaderBar = () => {
 
       {/* MOBILE MENU DRAWER */}
       {isMenuOpen && (
-        <div className="border-t border-slate-100 bg-white/95 backdrop-blur-xl md:hidden absolute top-16 left-0 right-0 shadow-xl animate-in slide-in-from-top-2 p-4 flex flex-col gap-4">
-          <div className="relative">
-            <Search variant="static" className="w-full" />
-          </div>
+        <div className="border-t border-slate-100 bg-white md:hidden absolute top-16 left-0 right-0 shadow-xl animate-in slide-in-from-top-2 p-4 flex flex-col gap-4">
+          {!isSearchPage && (
+            <div className="relative">
+              <Search variant="static" className="w-full" />
+            </div>
+          )}
 
           <nav className="flex flex-col gap-2">
             <Button variant="ghost" className="justify-start" onClick={() => { navigate('/search'); setIsMenuOpen(false); }}>
