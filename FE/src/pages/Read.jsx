@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, List, FileText, ChevronLeft, ArrowLeft } from "lucide-react";
+import { ChevronRight, List, FileText, ChevronLeft, ArrowLeft, Download } from "lucide-react";
 import Header from "@/components/HeaderBar";
 import { toast } from "react-toastify";
 import axios from "@/config/Axios-config";
@@ -24,6 +24,23 @@ const getDriveEmbedUrl = (url) => {
   }
   
   return url;
+};
+
+const getDriveDownloadUrl = (url) => {
+  if (!url) return null;
+  const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileMatch && fileMatch[1]) {
+    return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}`;
+  }
+  const folderMatch = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  if (folderMatch && folderMatch[1]) {
+    return null;
+  }
+  const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (idMatch && idMatch[1]) {
+    return `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+  }
+  return null;
 };
 
 export default function ReadBookPage() {
@@ -326,15 +343,28 @@ export default function ReadBookPage() {
                             className="w-full h-[800px] border rounded-lg shadow-sm"
                             allow="autoplay"
                           ></iframe>
-                          <a 
-                            href={selectedChapter.drive_link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm flex items-center gap-2"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-                            Mở bằng Google Drive
-                          </a>
+                          <div className="flex flex-wrap items-center justify-center gap-3 w-full">
+                            <a 
+                              href={selectedChapter.drive_link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors font-medium shadow-sm flex items-center gap-2 border border-slate-200 text-sm"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                              Mở bằng Google Drive
+                            </a>
+                            {getDriveDownloadUrl(selectedChapter.drive_link) && (
+                              <a 
+                                href={getDriveDownloadUrl(selectedChapter.drive_link)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm flex items-center gap-2 text-sm"
+                              >
+                                <Download className="h-4 w-4" />
+                                Tải tài liệu
+                              </a>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <div className="text-center py-20 text-slate-400">
