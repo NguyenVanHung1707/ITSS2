@@ -4,8 +4,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ProgressProvider } from './contexts/ProgressContext';
-import GlobalProgressTracker from './components/GlobalProgressTracker';
 // Admin imports
 import AdminLayout from './components/admin/AdminLayout';
 import RequireAdmin from './components/admin/RequireAdmin';
@@ -83,9 +81,8 @@ function AppContent() {
 
 function App() {
   return (
-    <ProgressProvider>
+    <>
       <AppContent />
-      <GlobalProgressTracker />
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -96,9 +93,9 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="colored"
+        theme="light"
       />
-    </ProgressProvider>
+    </>
   )
 }
 export default App;

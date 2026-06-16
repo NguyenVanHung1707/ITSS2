@@ -257,7 +257,7 @@ const HomePage = () => {
               Tính năng <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600">nổi bật</span>
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Trải nghiệm đọc sách thế hệ mới với các công nghệ AI tiên tiến
+              Học tập và nghiên cứu hiệu quả với kho tài liệu số chất lượng cao
             </p>
           </div>
 
