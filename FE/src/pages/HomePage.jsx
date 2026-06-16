@@ -165,25 +165,29 @@ const HomePage = () => {
       icon: <Search className="h-8 w-8" />,
       title: "Tìm kiếm thông minh",
       description: "Hệ thống tìm kiếm nâng cao theo tên sách, Khoa | Viện | Trường, thể loại một cách nhanh chóng và chính xác.",
-      color: "from-blue-500 to-cyan-600"
+      color: "from-blue-500 to-cyan-600",
+      path: "/search"
     },
     {
       icon: <Sparkles className="h-8 w-8" />,
       title: "Tài liệu chọn lọc",
       description: "Đề thi, slide bài giảng được tổng hợp từ nguồn uy tín giúp bạn ôn tập và đạt kết quả cao nhất.",
-      color: "from-emerald-500 to-teal-600"
+      color: "from-emerald-500 to-teal-600",
+      path: "/search"
     },
     {
       icon: <Library className="h-8 w-8" />,
       title: "Tủ sách cá nhân",
       description: "Lưu trữ những cuốn sách yêu thích của riêng bạn, theo dõi tiến trình đọc sách hàng ngày dễ dàng.",
-      color: "from-purple-500 to-indigo-600"
+      color: "from-purple-500 to-indigo-600",
+      path: "/bookshelf"
     },
     {
       icon: <BookOpen className="h-8 w-8" />,
       title: "Kho sách phong phú",
       description: "Hàng ngàn đầu sách thuộc nhiều thể loại đa dạng hoàn toàn miễn phí, cập nhật liên tục mỗi tuần.",
-      color: "from-orange-500 to-rose-600"
+      color: "from-orange-500 to-rose-600",
+      action: () => document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' })
     }
   ];
 
@@ -261,7 +265,15 @@ const HomePage = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                onClick={() => navigate('/search')}
+                onClick={() => {
+                  if (feature.action) {
+                    feature.action();
+                  } else if (feature.path) {
+                    navigate(feature.path);
+                  } else {
+                    navigate('/search');
+                  }
+                }}
                 className="group relative bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer gsap-feature-card"
               >
                 <div className="absolute inset-0 bg-linear-to-br opacity-0 group-hover:opacity-5 transition-opacity" style={{ background: `linear-gradient(135deg, ${feature.color.split(' ')[0].replace('from-', '')} 0%, ${feature.color.split(' ')[1].replace('to-', '')} 100%)` }} />
