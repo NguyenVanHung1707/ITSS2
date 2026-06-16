@@ -94,7 +94,7 @@ export default function IntroHero() {
                 style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
             >
                 <h2 ref={textLeftRef} className='whitespace-nowrap'>Thư Viện</h2>
-                <h2 ref={textRightRef} className='whitespace-nowrap'>Sách AI</h2>
+                <h2 ref={textRightRef} className='whitespace-nowrap'>Sách Số</h2>
             </div>
 
             {/* Video Container */}
@@ -135,7 +135,7 @@ export default function IntroHero() {
                     </h1>
 
                     <p className="text-lg md:text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
-                        Nền tảng đọc sách tích hợp AI tiên tiến nhất. Tóm tắt, dịch thuật, và chuyển đổi giọng nói chỉ trong một chạm.
+                        Nền tảng đọc sách số và tài liệu học tập trực tuyến. Dễ dàng tìm kiếm, lưu trữ và theo dõi bài tập, slide bài giảng mọi lúc mọi nơi.
                     </p>
 
                     <div className="flex flex-wrap gap-4">

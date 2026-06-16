@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, Star, Loader2, Trash2, Bot, Settings2, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, Star, Loader2, Trash2, Settings2, RefreshCw } from 'lucide-react';
 import axiosInstance from '../../config/Axios-config';
 
 // Temporary service definition if not exists, or move to separate file later.
@@ -67,39 +67,10 @@ export default function CommentsModeration() {
     try {
       await AdminCommentService.updateMode(newMode);
       setModerationMode(newMode);
-      const modeName = newMode === 'AI_AUTO' ? 'AI Tự Duyệt' : newMode === 'AUTO_APPROVE' ? 'Tự Động Duyệt Tất Cả' : 'Thủ công (Mặc định)';
+      const modeName = newMode === 'AUTO_APPROVE' ? 'Tự Động Duyệt Tất Cả' : 'Thủ công (Mặc định)';
       alert(`Đã chuyển sang chế độ: ${modeName}`);
     } catch (error) {
       alert("Lỗi cập nhật chế độ");
-    }
-  };
-
-  const handleBulkCheck = async () => {
-    try {
-      setLoading(true);
-      const res = await AdminCommentService.bulkCheck();
-      const processed = res?.data?.data?.processed ?? res?.data?.processed ?? 0;
-      const spamDetected = res?.data?.data?.spamDetected ?? res?.data?.spamDetected ?? 0;
-      alert(`Đã kiểm tra xong. ${processed} bình luận đã được xử lý. Phát hiện ${spamDetected} spam.`);
-      fetchComments();
-    } catch (error) {
-      console.error("Bulk check error:", error);
-      alert(`Lỗi khi chạy AI kiểm tra: ${error?.response?.data?.message || error.message}`);
-      setLoading(false);
-    }
-  };
-
-  const handleBulkClassify = async () => {
-    try {
-      setLoading(true);
-      const res = await AdminCommentService.bulkClassify();
-      const processed = res?.data?.data?.processed ?? res?.data?.processed ?? 0;
-      alert(`Đã phân loại xong. ${processed} bình luận đã được cập nhật cảm xúc.`);
-      fetchComments();
-    } catch (error) {
-      console.error("Bulk classify error:", error);
-      alert(`Lỗi khi chạy AI phân loại: ${error?.response?.data?.message || error.message}`);
-      setLoading(false);
     }
   };
 
@@ -240,12 +211,6 @@ export default function CommentsModeration() {
                 Thủ công
               </button>
               <button
-                onClick={() => updateMode('AI_AUTO')}
-                className={`px-3 py-1 text-xs rounded transition-all flex items-center gap-1 ${moderationMode === 'AI_AUTO' ? 'bg-purple-100 text-purple-700 font-bold' : 'text-slate-500 hover:text-purple-700'}`}
-              >
-                <Bot size={14} /> AI Tự duyệt
-              </button>
-              <button
                 onClick={() => updateMode('AUTO_APPROVE')}
                 className={`px-3 py-1 text-xs rounded transition-all flex items-center gap-1 ${moderationMode === 'AUTO_APPROVE' ? 'bg-green-100 text-green-700 font-bold' : 'text-slate-500 hover:text-green-700'}`}
               >
@@ -254,22 +219,6 @@ export default function CommentsModeration() {
             </div>
 
             <div className="flex gap-2">
-              <button
-                onClick={handleBulkCheck}
-                disabled={loading || comments.length === 0}
-                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-pink-600 text-white hover:bg-pink-700 flex items-center gap-1 shadow-sm disabled:opacity-50"
-                title="Kiểm tra Spam"
-              >
-                <Bot size={14} /> AI Check
-              </button>
-              <button
-                onClick={handleBulkClassify}
-                disabled={loading}
-                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-1 shadow-sm disabled:opacity-50"
-                title="Chỉ phân loại cảm xúc (không đổi trạng thái)"
-              >
-                <Bot size={14} /> AI Phân Loại
-              </button>
               <button
                 onClick={handleBulkApprove}
                 disabled={loading || comments.length === 0}

@@ -168,9 +168,9 @@ const HomePage = () => {
       color: "from-blue-500 to-cyan-600"
     },
     {
-      icon: <MessageCircle className="h-8 w-8" />,
-      title: "Chatbot Thư viện",
-      description: "Trợ lý ảo thông minh sẵn sàng giải đáp mọi thắc mắc về sách, Khoa | Viện | Trường và gợi ý sách phù hợp với sở thích của bạn.",
+      icon: <Sparkles className="h-8 w-8" />,
+      title: "Tài liệu chọn lọc",
+      description: "Đề thi, slide bài giảng được tổng hợp từ nguồn uy tín giúp bạn ôn tập và đạt kết quả cao nhất.",
       color: "from-emerald-500 to-teal-600"
     },
     {
@@ -353,7 +353,7 @@ const HomePage = () => {
                 <span className="text-xl font-bold">Thư Viện Sách</span>
               </div>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Nền tảng đọc sách số thông minh với công nghệ AI tiên tiến
+                Nền tảng chia sẻ tài liệu học tập, đề thi và slide bài giảng.
               </p>
             </div>
             <div>
@@ -367,9 +367,9 @@ const HomePage = () => {
             <div>
               <h3 className="font-semibold mb-4 text-base">Tính năng</h3>
               <ul className="space-y-2 text-sm text-slate-400">
-                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Tóm tắt AI</span></li>
-                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Text-to-Speech</span></li>
-                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Chatbot</span></li>
+                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Tìm kiếm tài liệu</span></li>
+                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Lưu tài liệu yêu thích</span></li>
+                <li><span onClick={() => navigate('/search')} className="hover:text-white transition-colors cursor-pointer">Đóng góp tài liệu</span></li>
               </ul>
             </div>
             <div>
