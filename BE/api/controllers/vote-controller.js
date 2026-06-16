@@ -1,6 +1,7 @@
 import Vote from "../models/vote-model.js";
 import Document from "../models/document-model.js";
 import { User } from "../models/user-model.js";
+import SystemSettings from "../models/system-settings-model.js";
 
 // Toggle or submit helpfulness vote for a document
 export const toggleVote = async (req, res) => {
@@ -302,11 +303,30 @@ export const getSentimentStatsCompat = async (req, res) => {
 };
 
 export const getModerationModeCompat = async (req, res) => {
-  res.json({ success: true, data: { mode: "DEFAULT" }, mode: "DEFAULT" });
+  try {
+    const setting = await SystemSettings.findOne({ where: { key: "comment_moderation_mode" } });
+    const mode = setting ? setting.value : "DEFAULT";
+    res.json({ success: true, data: { mode } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 export const updateModerationModeCompat = async (req, res) => {
-  res.json({ success: true, data: { mode: req.body?.mode || "DEFAULT" } });
+  try {
+    const mode = req.body?.mode || "DEFAULT";
+    const [setting, created] = await SystemSettings.findOrCreate({
+      where: { key: "comment_moderation_mode" },
+      defaults: { value: mode }
+    });
+    if (!created) {
+      setting.value = mode;
+      await setting.save();
+    }
+    res.json({ success: true, data: { mode } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 export const noOpBulkCompat = async (req, res) => {
