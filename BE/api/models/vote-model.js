@@ -24,6 +24,12 @@ const Vote = sequelize.define("Vote", {
     defaultValue: true,
     field: "is_helpful"
   },
+  is_reading: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: "is_reading"
+  },
   comment_text: {
     type: DataTypes.TEXT,
     allowNull: true,

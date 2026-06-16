@@ -14,11 +14,38 @@ router.get("/", authenticate, async (req, res) => {
     const { status = "FAVORITE" } = req.query;
 
     if (status === "READING") {
+      const votes = await Vote.findAll({
+        where: { user_id: userId, is_reading: true },
+        include: [
+          {
+            model: Document,
+            as: "document",
+            where: { is_deleted: 0 },
+            include: [
+              { model: Faculty, as: "faculty", attributes: ["id", "name", "code"] },
+              { model: Course, as: "course", attributes: ["id", "name", "code"] }
+            ]
+          }
+        ]
+      });
+
+      const reading = votes
+        .map(v => v.document)
+        .filter(Boolean)
+        .map(doc => {
+          const d = doc.toJSON ? doc.toJSON() : doc;
+          return {
+            ...d,
+            imageUrl: d.image_url || "/placeholder-book.svg",
+            author: d.faculty?.name || "Khoa/Viện HUST"
+          };
+        });
+
       return res.json({
         success: true,
         data: {
-          reading: [],
-          total: 0
+          reading,
+          total: reading.length
         }
       });
     }
@@ -94,15 +121,15 @@ router.get("/books/:id/check", optionalAuth, async (req, res) => {
       success: true,
       data: {
         inBookshelf: !!vote,
-        statuses: vote ? ["FAVORITE"] : [],
-        isFavorite: !!vote,
-        isReading: false
+        statuses: vote ? [vote.is_helpful && "FAVORITE", vote.is_reading && "READING"].filter(Boolean) : [],
+        isFavorite: vote ? vote.is_helpful : false,
+        isReading: vote ? vote.is_reading : false
       }
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Lỗi kiểm tra trạng thái yêu thích",
+      message: "Lỗi kiểm tra trạng thái yêu thích và đang đọc",
       error: error.message
     });
   }
@@ -131,61 +158,79 @@ router.put("/books/:id/progress", authenticate, async (req, res) => {
   });
 });
 
-// POST /api/bookshelf/books/:id (Toggle/Add to favorite)
+// POST /api/bookshelf/books/:id (Toggle/Add to favorite or reading)
 router.post("/books/:id", authenticate, async (req, res) => {
   try {
     const userId = req.user.user_id;
     const documentId = parseInt(req.params.id);
+    const { status = "FAVORITE" } = req.body;
 
     const [vote, created] = await Vote.findOrCreate({
       where: { user_id: userId, document_id: documentId },
       defaults: {
-        is_helpful: true,
+        is_helpful: status === "FAVORITE",
+        is_reading: status === "READING",
         rating: 5
       }
     });
 
     if (!created) {
-      vote.is_helpful = true;
+      if (status === "FAVORITE") {
+        vote.is_helpful = true;
+      } else if (status === "READING") {
+        vote.is_reading = true;
+      }
       await vote.save();
     }
 
     res.json({
       success: true,
-      message: "Đã thêm vào yêu thích thành công",
+      message: `Đã cập nhật trạng thái ${status === "FAVORITE" ? "yêu thích" : "đang đọc"} thành công`,
       data: vote
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Lỗi thêm vào yêu thích",
+      message: "Lỗi cập nhật tủ sách",
       error: error.message
     });
   }
 });
 
-// DELETE /api/bookshelf/books/:id (Remove from favorite)
+// DELETE /api/bookshelf/books/:id (Remove from favorite or reading)
 router.delete("/books/:id", authenticate, async (req, res) => {
   try {
     const userId = req.user.user_id;
     const documentId = parseInt(req.params.id);
+    const { status = "FAVORITE" } = req.query;
 
     const vote = await Vote.findOne({
       where: { user_id: userId, document_id: documentId }
     });
 
     if (vote) {
-      await vote.destroy();
+      if (status === "FAVORITE") {
+        vote.is_helpful = false;
+      } else if (status === "READING") {
+        vote.is_reading = false;
+      }
+
+      // If it is no longer favorited and no longer being read, delete the record
+      if (!vote.is_helpful && !vote.is_reading) {
+        await vote.destroy();
+      } else {
+        await vote.save();
+      }
     }
 
     res.json({
       success: true,
-      message: "Đã xóa khỏi yêu thích thành công"
+      message: `Đã xóa trạng thái ${status === "FAVORITE" ? "yêu thích" : "đang đọc"} thành công`
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Lỗi xóa khỏi yêu thích",
+      message: "Lỗi xóa trạng thái trong tủ sách",
       error: error.message
     });
   }
